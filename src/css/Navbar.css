@@ -34,6 +34,21 @@ html {
     color: var(--base-color);
     z-index: 10;
     /* Keeps navbar on top of other content */
+
+    /*
+      The navbar container spans the full width, which can block clicks on the
+      map underneath (especially the upper part). Allow clicks to pass through
+      empty areas while keeping the actual navbar controls clickable.
+    */
+    pointer-events: none;
+}
+
+/* Re-enable pointer events for the interactive navbar controls */
+.Navbar > *,
+.Navbar button,
+.Navbar .MuiIconButton-root,
+.Navbar .MuiButtonBase-root {
+    pointer-events: auto;
 }
 
 .navbar-box {
