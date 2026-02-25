@@ -390,8 +390,8 @@ const Navbar = ({ userDetails }) => {
             <List className="navbar-list">
                 {[
                     { text: 'Map', path: '/dashboard', icon: <MapIcon /> },
-                    // Modified notification menu item condition
-                    ...((userRole !== 'admin' && userRole !== 'it admin') ? [{
+                    // Notifications should be accessible for admins too (new reports / messages)
+                    {
                         text: 'Notification',
                         path: '/notification',
                         icon: notificationCount > 0 ? (
@@ -401,7 +401,7 @@ const Navbar = ({ userDetails }) => {
                         ) : (
                             <NotificationsIcon />
                         )
-                    }] : []),
+                    },
                     { text: 'Report History', path: '/history', icon: <HistoryIcon /> },
                     { text: 'Profile', path: '/profile', icon: <EditIcon /> },
                 ].map(({ text, path, icon }) => (

@@ -110,45 +110,82 @@ const AuthForm = () => {
                 });
                 setTimeout(() => navigate('/dashboard'), 3000);
             } else {
-                if (isAdminLogin) {
-                    // Admin login flow
-                    const { data: userData, error: userError } = await supabase
-                        .from('users')
-                        .select('email')
-                        .eq('username', formData.username)
-                        .eq('role', 'admin')
-                        .single();
+                
+if (isAdminLogin) {
+    // Admin login flow (admins only)
+    // IMPORTANT: With Supabase RLS enabled, we cannot reliably lookup users by username/email BEFORE auth.
+    // So we sign in first (requires email), then verify role from the "users" table using the authed uid.
+    const ident = (formData.username || "").trim();
 
-                    if (userError) throw userError;
-                    if (!userData) throw new Error('Admin user not found');
+    const looksLikeEmail = /.+@.+\..+/.test(ident);
+    if (!looksLikeEmail) {
+        throw new Error('Please use your admin email to log in.');
+    }
 
-                    const { error: authError } = await supabase.auth.signInWithPassword({
-                        email: userData.email,
-                        password: formData.password,
-                    });
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: ident,
+        password: formData.password,
+    });
 
-                    if (authError) throw authError;
+    if (authError) throw authError;
 
-                    setSnackbar({
-                        open: true,
-                        message: 'Admin login successful! Redirecting...',
-                        severity: 'success'
-                    });
-                } else {
-                    // Regular login flow
-                    const { error } = await supabase.auth.signInWithPassword({
-                        email: formData.email,
-                        password: formData.password,
-                    });
+    // Enforce admin-only here too (in case role table mismatch)
+    const authedUserId = authData?.user?.id;
+    if (authedUserId) {
+        const { data: meRow, error: meErr } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', authedUserId)
+            .limit(1)
+            .maybeSingle();
 
-                    if (error) throw error;
+        if (meErr) throw meErr;
+        const roleVal = (meRow?.role || '').toString().trim();
+        if (!roleVal || roleVal.toLowerCase() !== 'admin') {
+            await supabase.auth.signOut();
+            throw new Error('This account is not an admin. Please use the regular Login page.');
+        }
+    }
 
-                    setSnackbar({
-                        open: true,
-                        message: 'Login successful! Redirecting...',
-                        severity: 'success'
-                    });
-                }
+    setSnackbar({
+        open: true,
+        message: 'Admin login successful! Redirecting...',
+        severity: 'success'
+    });
+} else {
+    // Regular login flow (students/faculty only)
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+    });
+
+    if (error) throw error;
+
+    // If this account is admin, block regular login
+    const authedUserId = authData?.user?.id;
+    if (authedUserId) {
+        const { data: meRow, error: meErr } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', authedUserId)
+            .limit(1)
+            .maybeSingle();
+
+        if (meErr) throw meErr;
+
+        const roleVal = (meRow?.role || '').toString().trim();
+        if (roleVal && roleVal.toLowerCase() === 'admin') {
+            await supabase.auth.signOut();
+            throw new Error('Admins must log in using Admin Login.');
+        }
+    }
+
+    setSnackbar({
+        open: true,
+        message: 'Login successful! Redirecting...',
+        severity: 'success'
+    });
+}
                 setTimeout(() => navigate('/dashboard'), 3000);
             }
         } catch (error) {
