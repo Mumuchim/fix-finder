@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../css/Register.css';
 import { Link } from 'react-router-dom';
 import showPass from '../assets/show.svg';
@@ -16,6 +16,12 @@ const Login = () => {
     const togglePasswordVisibility = () => {
         setPasswordVisible(!isPasswordVisible);
     };
+
+    // Use a different background for the login page only.
+    useEffect(() => {
+        document.body.classList.add('login-bg');
+        return () => document.body.classList.remove('login-bg');
+    }, []);
 
     const handleSubmit = async (event) => {
         event.preventDefault();

@@ -219,6 +219,28 @@ const ReportStatus = () => {
         if (pinId) fetchReportData();
     }, [pinId]);
 
+    // Start the 24hr expiration countdown when the REPORTER views a DONE pin.
+    // We store a local timestamp; Map.jsx will auto-delete the pin/report after 24hrs.
+    useEffect(() => {
+        const markDoneSeen = async () => {
+            if (!reportData) return;
+            const status = String(reportData.status || '').trim().toLowerCase();
+            if (status !== 'done') return;
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user?.id) return;
+
+            // Only the reporter triggers the countdown.
+            if (String(reportData.user_uid || '') !== String(user.id)) return;
+
+            const key = `doneSeenAt:${user.id}:${reportData.pinid || pinId}`;
+            if (!localStorage.getItem(key)) {
+                localStorage.setItem(key, String(Date.now()));
+            }
+        };
+        markDoneSeen();
+    }, [reportData, pinId]);
+
     useEffect(() => {
         // NOTE: this component doesn't need to fetch and store local user profile state.
         // The previous version referenced setUserId/setUserData which did not exist and

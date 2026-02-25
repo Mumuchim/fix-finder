@@ -33,6 +33,12 @@ body {
     padding: 20px;
 }
 
+/* Login-only background (applied by pages/Login.jsx) */
+body.login-bg {
+    /* Force override for login background */
+    background-image: url('../assets/bglogin.png') !important;
+}
+
 .wrapper {
     background-color: var(--base-color);
     width: 100%;

@@ -327,7 +327,6 @@ if (isAdminLogin) {
                                         >
                                             <MenuItem value="Student">Student</MenuItem>
                                             <MenuItem value="Faculty">Faculty</MenuItem>
-                                            <MenuItem value="Admin">Admin</MenuItem>
                                         </TextField>
                                     </Box>
                                 </Grid>

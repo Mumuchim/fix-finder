@@ -52,8 +52,9 @@ const pinTypes = [
     { id: 6, label: "Request", icon: RequestIcon, hoverIcon: RequestHoverIcon, inProgressIcon: RequestInProgressIcon, doneIcon: RequestDoneIcon },
 ];
 
-const FloorContent = ({ areas, showImages, pins, onAreaClick, onPinClick, textStyle, blinkPinId, focusPulse }) => (
+const FloorContent = ({ svgRef, areas, showImages, pins, onAreaClick, onPinClick, textStyle, blinkPinId, focusPulse }) => (
     <svg
+        ref={svgRef}
         width="100%"
         height="100%"
         viewBox="0 0 1080 1080"
@@ -124,10 +125,13 @@ const FloorContent = ({ areas, showImages, pins, onAreaClick, onPinClick, textSt
             const isInProgress = String(pin.status || '').trim().toLowerCase() === 'in progress';
             const isDone = ['resolved','done','finished','completed'].includes(String(pin.status || '').trim().toLowerCase());
 
+    const dx = Number(pin?.__renderOffset?.dx || 0);
+    const dy = Number(pin?.__renderOffset?.dy || 0);
+
     return (
                 <g
                     key={pinKey}
-                    transform={`translate(${pin.coordinates.x}, ${pin.coordinates.y})`}
+                    transform={`translate(${(pin.coordinates.x + dx)}, ${(pin.coordinates.y + dy)})`}
                     onClick={() => onPinClick(pin)}
                     style={{ cursor: "pointer" }}
                 >
@@ -175,12 +179,14 @@ const FloorMap = () => {
     const [selectedAreaLabel, setSelectedAreaLabel] = useState('');
     const [showNotification, setShowNotification] = useState(false);
     const [latestNotification, setLatestNotification] = useState(null);
+    const [currentUserId, setCurrentUserId] = useState(null);
     const userRoleRef = useRef(''); // Add ref for user role
     const userRef = useRef(null); // Add ref for user
     const floor1Count = pins.filter(pin => pin.floor === "1").length;
     const floor2Count = pins.filter(pin => pin.floor === "2").length;
     // Admin dashboard metric (used in the small overlay on the map)
     const activeJobsCount = pins.filter(p => String(p.status || '').trim().toLowerCase() === 'in progress').length;
+    const pendingJobsCount = pins.filter(p => String(p.status || '').trim().toLowerCase() === 'pending').length;
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -257,9 +263,74 @@ const FloorMap = () => {
         const updateUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             userRef.current = user;
+            setCurrentUserId(user?.id || null);
         };
         updateUser();
     }, []);
+
+    // Zoom (slider + mouse wheel)
+    const [zoom, setZoom] = useState(1);
+    const mapViewportRef = useRef(null);
+    const svgRef = useRef(null);
+
+    const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+    const setZoomClamped = (z) => setZoom(clamp(Number(z) || 1, 0.8, 2.5));
+
+    const handleWheelZoom = (e) => {
+        // Only zoom when the pointer is over the map.
+        if (!mapViewportRef.current) return;
+        // Prevent page scroll while zooming the map.
+        e.preventDefault();
+        const delta = e.deltaY;
+        const step = delta > 0 ? -0.08 : 0.08;
+        setZoom(prev => clamp(prev + step, 0.8, 2.5));
+    };
+
+    const clientToSvgCoords = (event) => {
+        const svg = svgRef.current;
+        if (!svg) return null;
+        const rect = svg.getBoundingClientRect();
+        const vb = svg.viewBox?.baseVal;
+        const viewW = vb?.width || 1080;
+        const viewH = vb?.height || 1080;
+        const x = ((event.clientX - rect.left) / rect.width) * viewW;
+        const y = ((event.clientY - rect.top) / rect.height) * viewH;
+        return { x, y };
+    };
+
+    const withAntiOverlap = (list) => {
+        // Group by near-identical coordinates and fan them out slightly.
+        const groups = new Map();
+        const keyFor = (p) => {
+            const c = p?.coordinates || {};
+            const x = Math.round(Number(c.x) || 0);
+            const y = Math.round(Number(c.y) || 0);
+            return `${x},${y}`;
+        };
+
+        list.forEach((p, idx) => {
+            const key = keyFor(p);
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key).push({ p, idx });
+        });
+
+        const out = [...list];
+        groups.forEach((arr) => {
+            if (arr.length <= 1) return;
+            const radius = 22; // pixels in SVG space
+            arr.forEach((item, i) => {
+                const angle = (i / arr.length) * Math.PI * 2;
+                out[item.idx] = {
+                    ...item.p,
+                    __renderOffset: {
+                        dx: Math.cos(angle) * radius,
+                        dy: Math.sin(angle) * radius,
+                    }
+                };
+            });
+        });
+        return out;
+    };
 
 
     const toggleFloor = () => {
@@ -289,11 +360,9 @@ const FloorMap = () => {
             return;
         }
 
-        const svg = event.currentTarget.ownerSVGElement;
-        const point = svg.createSVGPoint();
-        point.x = event.clientX;
-        point.y = event.clientY;
-        const { x, y } = point.matrixTransform(svg.getScreenCTM().inverse());
+        const coords = clientToSvgCoords(event);
+        if (!coords) return;
+        const { x, y } = coords;
 
         setSelectedPosition({ x, y });
         setSelectedAreaLabel(area.label);
@@ -502,10 +571,57 @@ useEffect(() => {
 
             if (error) throw error;
 
-            const parsedPins = data.map(pin => ({
+            let parsedPins = data.map(pin => ({
                 ...pin,
                 coordinates: safeParseCoordinates(pin.coordinates)
             }));
+
+            // Auto-expire DONE pins 24hrs after the reporter has *seen* the completion.
+            // Countdown starts when reporter opens the Status page (stored in localStorage).
+            const maybeExpireDonePins = async () => {
+                if (!user?.id) return;
+
+                const now = Date.now();
+                const keep = [];
+                for (const pin of parsedPins) {
+                    const status = String(pin?.status || '').trim().toLowerCase();
+                    const isDone = status === 'done';
+                    const isOwner = String(pin?.user_uid || '') === String(user.id);
+                    if (!isDone || !isOwner) {
+                        keep.push(pin);
+                        continue;
+                    }
+
+                    const key = `doneSeenAt:${user.id}:${pin.pinid}`;
+                    const seenAtRaw = localStorage.getItem(key);
+                    if (!seenAtRaw) {
+                        // Reporter hasn't viewed the DONE status yet; don't start countdown.
+                        keep.push(pin);
+                        continue;
+                    }
+
+                    const seenAt = Number(seenAtRaw);
+                    const msSinceSeen = now - (Number.isFinite(seenAt) ? seenAt : now);
+                    const ms24h = 24 * 60 * 60 * 1000;
+                    if (msSinceSeen < ms24h) {
+                        keep.push(pin);
+                        continue;
+                    }
+
+                    try {
+                        // Remove both pin and related report(s) by pinid.
+                        await supabase.from('reports').delete().eq('pinid', pin.pinid);
+                        await supabase.from('pins').delete().eq('pinid', pin.pinid);
+                        localStorage.removeItem(key);
+                    } catch (e) {
+                        console.warn('[WARN] Failed to expire done pin:', pin?.pinid, e?.message || e);
+                        keep.push(pin); // Keep it if deletion fails.
+                    }
+                }
+                parsedPins = keep;
+            };
+
+            await maybeExpireDonePins();
 
             console.log('[DEBUG] Parsed pins:', parsedPins);
             setPins(parsedPins);
@@ -639,26 +755,27 @@ useEffect(() => {
         },
         controlButtons: {
             position: "absolute",
-            bottom: "5%",
-            right: "5%",
+            bottom: "24px",
+            right: "24px",
             display: "flex",
             flexDirection: "column",
-            gap: "clamp(8px, 1vw, 10px)",
+            gap: "clamp(6px, 1vw, 8px)",
             zIndex: 10,
             '@media (maxWidth: 600px)': {
-                bottom: "2%",
-                right: "2%",
+                bottom: "16px",
+                right: "16px",
             },
         },
         button: {
-            padding: "clamp(8px, 1.5vw, 12px) clamp(12px, 2vw, 20px)",
-            fontSize: "clamp(12px, 2vw, 16px)",
+            padding: "clamp(6px, 1.2vw, 10px) clamp(10px, 1.8vw, 16px)",
+            paddingLeft: "clamp(8px, 1.4vw, 12px)",
+            fontSize: "clamp(11px, 1.6vw, 14px)",
             backgroundColor: "#457B9D",
             color: "#fae6cfff",
             border: "none",
             borderRadius: "8px",
             cursor: "pointer",
-            width: "clamp(120px, 20vw, 200px)",
+            width: "clamp(105px, 16vw, 165px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -736,14 +853,22 @@ useEffect(() => {
                             <div style={{
                                 background: '#1D3557',
                                 color: '#fae6cfff',
-                                padding: '10px 14px',
+                                padding: '10px 12px',
                                 borderRadius: '14px',
                                 boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
                                 fontFamily: 'Poppins',
                                 minWidth: '160px'
                             }}>
-                                <div style={{ fontSize: '12px', opacity: 0.9 }}>Active jobs</div>
-                                <div style={{ fontSize: '26px', fontWeight: 700, lineHeight: 1 }}>{activeJobsCount}</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    <div>
+                                        <div style={{ fontSize: '12px', opacity: 0.9 }}>Active jobs</div>
+                                        <div style={{ fontSize: '24px', fontWeight: 700, lineHeight: 1 }}>{activeJobsCount}</div>
+                                    </div>
+                                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.18)', paddingTop: '6px' }}>
+                                        <div style={{ fontSize: '11px', opacity: 0.85 }}>Pending jobs</div>
+                                        <div style={{ fontSize: '24px', fontWeight: 700, lineHeight: 1 }}>{pendingJobsCount}</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -821,8 +946,8 @@ useEffect(() => {
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
-        // Add margin to prevent overlap if button is near corner
-        marginRight: '120px' // Adjust based on your needs
+        // Keep a slight nudge so the badge doesn't collide with other UI
+        marginRight: '84px'
     }}
     onMouseEnter={() => setIsFloorHovered(true)}
     onMouseLeave={() => setIsFloorHovered(false)}
@@ -872,10 +997,25 @@ useEffect(() => {
                         alignItems: "center",
                         padding: "clamp(10px, 2vw, 20px)",
                     }}>
+                        <div
+                            ref={mapViewportRef}
+                            onWheel={handleWheelZoom}
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transform: `scale(${zoom})`,
+                                transformOrigin: 'center center',
+                                touchAction: 'none',
+                            }}
+                        >
                         <FloorContent
+                            svgRef={svgRef}
                             areas={areasToDisplay}
                             showImages={showImages}
-                            pins={pins.filter(pin => pin.floor === String(currentFloor))}
+                            pins={withAntiOverlap(pins.filter(pin => pin.floor === String(currentFloor)))}
                             // pins={pins}
                             onAreaClick={handleAreaClick}
                             onPinClick={handlePinClick}
@@ -883,6 +1023,35 @@ useEffect(() => {
                             blinkPinId={blinkPinId}
                             focusPulse={(focusPulse && Number(focusPulse.floor) === Number(currentFloor)) ? focusPulse : null}
                         />
+                        </div>
+                    </div>
+
+                    {/* Zoom control */}
+                    <div style={{
+                        position: 'fixed',
+                        bottom: '24px',
+                        left: '24px',
+                        zIndex: 1001,
+                        background: 'rgba(29, 53, 87, 0.85)',
+                        color: '#fae6cfff',
+                        padding: '10px 12px',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        fontFamily: 'Poppins'
+                    }}>
+                        <span style={{ fontSize: '12px', opacity: 0.95 }}>Zoom</span>
+                        <input
+                            type="range"
+                            min="0.8"
+                            max="2.5"
+                            step="0.05"
+                            value={zoom}
+                            onChange={(e) => setZoomClamped(e.target.value)}
+                            style={{ width: '160px' }}
+                        />
+                        <span style={{ fontSize: '12px', width: '44px', textAlign: 'right' }}>{Math.round(zoom * 100)}%</span>
                     </div>
 
                     {/* Pin Selection Modal */}
@@ -1015,18 +1184,27 @@ useEffect(() => {
             gap: '12px', // Slightly increased gap
             marginTop: '1.5rem',
         }}>
-            <Button
-                style={{
-                    fontSize: 'clamp(12px, 2vw, 14px)',
-                    backgroundColor: '#E63946',
-                    color: '#fae6cfff',
-                    flex: 1, // Equal button width
-                    padding: '8px', // More padding for better fit
-                }}
-                onClick={handleDeletePin}
-            >
-                Delete Pin
-            </Button>
+            {(
+                (userRole === 'admin' || userRole === 'it admin') ||
+                (
+                    ['student', 'faculty'].includes(userRole) &&
+                    String(selectedPin?.user_uid || '') === String(currentUserId || '') &&
+                    String(selectedPin?.status || '').trim().toLowerCase() !== 'in progress'
+                )
+            ) && (
+                <Button
+                    style={{
+                        fontSize: 'clamp(12px, 2vw, 14px)',
+                        backgroundColor: '#E63946',
+                        color: '#fae6cfff',
+                        flex: 1, // Equal button width
+                        padding: '8px',
+                    }}
+                    onClick={handleDeletePin}
+                >
+                    Delete Pin
+                </Button>
+            )}
             <Button
                 style={{
                     fontSize: 'clamp(12px, 2vw, 14px)',

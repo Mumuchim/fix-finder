@@ -2724,17 +2724,19 @@ const History = () => {
                             {isPrinting ? 'Generating...' : isMobile ? 'Export All' : 'Export All as PDF'}
                         </Button>
 
-                        <Button
-                            variant="contained"
-                            color="error"
-                            startIcon={isDeletingAll ? <CircularProgress size={20} /> : <FaRadiation />}
-                            onClick={handleDeleteAllReports}
-                            disabled={isDeletingAll || reports.length === 0}
-                            fullWidth={isMobile}
-                            size={isMobile ? "medium" : "medium"}
-                        >
-                            {isDeletingAll ? 'Deleting...' : 'Delete All'}
-                        </Button>
+                        {(formData.role?.trim().toLowerCase() === 'admin' || formData.role?.trim().toLowerCase() === 'it admin') && (
+                            <Button
+                                variant="contained"
+                                color="error"
+                                startIcon={isDeletingAll ? <CircularProgress size={20} /> : <FaRadiation />}
+                                onClick={handleDeleteAllReports}
+                                disabled={isDeletingAll || reports.length === 0}
+                                fullWidth={isMobile}
+                                size={isMobile ? "medium" : "medium"}
+                            >
+                                {isDeletingAll ? 'Deleting...' : 'Delete All'}
+                            </Button>
+                        )}
                     </Box>
                 </Box>
             </Box>
@@ -2852,19 +2854,21 @@ const History = () => {
                                             >
                                                 {isMobile ? 'Export' : 'Export PDF'}
                                             </Button>
-                                            <Button
-                                                startIcon={<FaTrash />}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDeleteReport(report.id);
-                                                }}
-                                                color="error"
-                                                fullWidth={isMobile}
-                                                size={isMobile ? "small" : "medium"}
-                                                variant={isMobile ? "outlined" : "text"}
-                                            >
-                                                Delete
-                                            </Button>
+                                            {(formData.role?.trim().toLowerCase() === 'admin' || formData.role?.trim().toLowerCase() === 'it admin') && (
+                                                <Button
+                                                    startIcon={<FaTrash />}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDeleteReport(report.id);
+                                                    }}
+                                                    color="error"
+                                                    fullWidth={isMobile}
+                                                    size={isMobile ? "small" : "medium"}
+                                                    variant={isMobile ? "outlined" : "text"}
+                                                >
+                                                    Delete
+                                                </Button>
+                                            )}
                                         </Box>
                                     </Box>
                                 </CardContent>
