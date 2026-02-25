@@ -1,0 +1,48 @@
+{
+  "name": "ff-supabase",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@fontsource/poppins": "^5.1.1",
+    "@mui/icons-material": "^6.4.9",
+    "@mui/joy": "^5.0.0-beta.51",
+    "@mui/material": "^6.3.1",
+    "@mui/x-date-pickers": "^7.23.6",
+    "@react-pdf/renderer": "^4.3.0",
+    "@supabase/supabase-js": "^2.47.10",
+    "react": "^18.0.0",
+    "react-beautiful-dnd": "^13.1.1",
+    "react-dom": "^18.0.0",
+    "react-draggable": "^4.4.6",
+    "react-icons": "^5.5.0",
+    "react-router": "^7.1.1",
+    "react-router-dom": "^6.14.1",
+    "react-scripts": "^5.0.1",
+    "react-to-print": "^3.0.5",
+    "react-toastify": "^11.0.2",
+    "resend": "^4.1.2",
+    "supabase": "^2.19.7",
+    "typeface-poppins": "^1.1.13"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "globals": "^15.14.0",
+    "vite": "^6.0.5"
+  }
+}
