@@ -155,14 +155,25 @@ const ReportStatus = () => {
 
     const handleMarkAsDone = async () => {
         try {
+            // 1) Mark report as Resolved
             const { error } = await supabase
                 .from('reports')
                 .update({ status: 'Resolved' })
-                .eq('pinid', pinId);
-    
+                .or(`pinid.eq.${pinId},id.eq.${pinId}`);
+
             if (error) throw error;
-            
-            await handleDeletePin();
+
+            // 2) Keep the pin (do NOT delete). Just mark it as Resolved so it can still be shown on the reporter's map
+            //    and can render with the *_done.png pin style.
+            const { error: pinErr } = await supabase
+                .from('pins')
+                .update({ status: 'Resolved' })
+                .eq('pinid', pinId);
+
+            if (pinErr) {
+                console.warn('[WARN] Could not update pin status to Resolved:', pinErr.message);
+            }
+
             setReportData(prev => ({ ...prev, status: 'Resolved' }));
             alert('Report marked as done!');
             await sendNotification(`Your ${reportData.type} Report at ${reportData.specific_place} has been resolved!`);
@@ -176,13 +187,27 @@ const ReportStatus = () => {
     useEffect(() => {
         const fetchReportData = async () => {
             try {
-                const { data, error } = await supabase
+                // Primary: reports linked by pinid (expected)
+                let { data, error } = await supabase
                     .from("reports")
                     .select("*")
                     .eq("pinid", pinId)
-                    .single();
-                
+                    .order("created_at", { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
                 if (error) throw error;
+
+                // Fallback #1: sometimes the route param might be a report id
+                if (!data) {
+                    const r1 = await supabase
+                        .from("reports")
+                        .select("*")
+                        .eq("id", pinId)
+                        .maybeSingle();
+                    if (r1.error) throw r1.error;
+                    data = r1.data || null;
+                }
                 if (!data) throw new Error("No report found for this pin");
                 setReportData(data);
             } catch (err) {
@@ -231,6 +256,61 @@ const ReportStatus = () => {
           if (error) throw error;
         } catch (err) {
           console.error('Error sending notification:', err);
+        }
+    };
+
+    // Notify "nearby" users when a repair starts.
+    // This build doesn't track live user GPS/position, so we treat "nearby" as:
+    // users who have pins on the same floor (i.e., they likely use that area).
+    const notifyNearbyUsersRepairStarted = async ({ pinid, floor, type, specific_place, accepted_by, reporter_uid }) => {
+        try {
+            if (!pinid) return;
+            if (!floor) return;
+
+            // Find users who have pins on the same floor.
+            const { data: floorPins, error: floorPinsError } = await supabase
+                .from('pins')
+                .select('user_uid')
+                .eq('floor', String(floor));
+            if (floorPinsError) throw floorPinsError;
+
+            const candidateIds = Array.from(
+                new Set((floorPins || []).map(p => p.user_uid).filter(Boolean))
+            );
+
+            // Remove the reporter (they already get a direct notification)
+            const filteredCandidates = candidateIds.filter(id => id !== reporter_uid);
+            if (filteredCandidates.length === 0) return;
+
+            // Filter out admins (they don't need "nearby" user alerts)
+            const { data: usersRows, error: usersError } = await supabase
+                .from('users')
+                .select('id, role')
+                .in('id', filteredCandidates);
+            if (usersError) throw usersError;
+
+            const targetUserIds = (usersRows || [])
+                .filter(u => String(u.role || '').trim().toLowerCase() !== 'admin')
+                .map(u => u.id);
+
+            if (targetUserIds.length === 0) return;
+
+            const place = specific_place ? ` at ${specific_place}` : '';
+            const msg = `Repair started: ${type || 'Maintenance'}${place} is now In Progress${accepted_by ? ` (accepted by ${accepted_by})` : ''}.`;
+
+            const rows = targetUserIds.map(uid => ({
+                user_id: uid,
+                message: msg,
+                type: 'status_update',
+                pinid: pinid,
+            }));
+
+            const { error: insError } = await supabase
+                .from('notifications')
+                .insert(rows);
+            if (insError) throw insError;
+        } catch (err) {
+            console.warn('[WARN] Nearby user notification failed:', err?.message);
         }
     };
       
@@ -285,19 +365,33 @@ const ReportStatus = () => {
                     status: 'In Progress',
                     accepted_by: adminName 
                 })
-                .eq('pinid', pinId);
+                .or(`pinid.eq.${pinId},id.eq.${pinId}`);
             
             if (reportError) throw reportError;
     
             // Update pin status
+            // This FixFinder build links pins <-> reports via `pinid` (see ReportForm.jsx).
+            // So: when a report is accepted, update the pin row using pinid.
+            // (If your DB has RLS enabled, make sure admins can UPDATE pins.)
+            let pinIdForPin = pinId;
+            try {
+                const { data: r1 } = await supabase
+                    .from('reports')
+                    .select('pinid')
+                    .or(`pinid.eq.${pinId},id.eq.${pinId}`)
+                    .maybeSingle();
+                if (r1?.pinid) pinIdForPin = r1.pinid;
+            } catch (e) {
+                console.warn('[WARN] Could not resolve pinid from reports; using route pinId.', e?.message);
+            }
+
             const { error: pinError } = await supabase
                 .from('pins')
-                .update({ 
+                .update({
                     status: 'In Progress',
-                    accepted_by: adminName
+                    accepted_by: adminName,
                 })
-                .eq('pinid', pinId);
-            
+                .eq('pinid', pinIdForPin);
             if (pinError) throw pinError;
     
             // Update local state
@@ -312,6 +406,16 @@ const ReportStatus = () => {
                 `Your ${reportData.type} Report at ${reportData.specific_place} ` +
                 `has been accepted by ${adminName} and is now in progress!`
             );
+
+            // Notify other "nearby" users (same floor) that a repair has started.
+            await notifyNearbyUsersRepairStarted({
+                pinid: pinIdForPin,
+                floor: reportData.floor,
+                type: reportData.type,
+                specific_place: reportData.specific_place,
+                accepted_by: adminName,
+                reporter_uid: reportData.user_uid,
+            });
         } catch (err) {
             console.error('Error accepting report:', err);
             setError(err.message);
@@ -327,7 +431,7 @@ const ReportStatus = () => {
                     status: 'Denied',
                     denied_reason: reason 
                 })
-                .eq('pinid', pinId);
+                .or(`pinid.eq.${pinId},id.eq.${pinId}`);
     
             if (reportError) throw reportError;
     
@@ -349,10 +453,8 @@ const ReportStatus = () => {
     const handleDeletePin = async () => {
         if (!pinId) return;
         try {
-            const { error } = await supabase
-                .from('pins')
-                .delete()
-                .eq('pinid', pinId);
+            const del = supabase.from('pins').delete().eq('pinid', pinId);
+            const { error } = await del;
     
             if (error) throw error;
         } catch (err) {

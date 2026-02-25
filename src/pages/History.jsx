@@ -114,7 +114,7 @@
 // // // //     //             .order('created_at', { ascending: false });
 
 // // // //     //         if (formData.role !== 'admin') {
-// // // //     //             query = query.eq('user_uid', formData.customUid);
+// // // //     //             query = query.or(`user_uid.eq.${formData.customUid},status.eq.In%20Progress`);
 // // // //     //         }
 
 // // // //     //         const { data: reportsData, error: reportsError } = await query;
@@ -2481,7 +2481,10 @@ const History = () => {
             if (formData.role === 'it admin') {
                 query = query.eq('type', 'IT Maintenance');
             } else if (formData.role !== 'admin') {
-                query = query.eq('user_uid', formData.customUid);
+                // NOTE: don't manually URL-encode the space here.
+                // Supabase/PostgREST will handle encoding; using "In%20Progress" can end up double-encoded
+                // and fail to match rows.
+                query = query.or(`user_uid.eq.${formData.customUid},status.eq.In Progress`);
             }
 
             const { data: reportsData } = await query;

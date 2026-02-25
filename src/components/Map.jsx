@@ -20,24 +20,36 @@ import Report from './ReportForm'; // Import the ReportForm component
 // Import icons
 import CautionIcon from '../assets/images/Caution_noshadow.png';
 import CautionHoverIcon from '../assets/images/Caution_symbol.png';
+import CautionInProgressIcon from '../assets/images/Caution_inprogress.png';
+import CautionDoneIcon from '../assets/images/Caution_done.png';
 import CleaningIcon from '../assets/images/Cleaning_shadow.png';
 import CleaningHoverIcon from '../assets/images/Cleaning_symbol.png';
+import CleaningInProgressIcon from '../assets/images/Cleaning_inprogress.png';
+import CleaningDoneIcon from '../assets/images/Cleaning_done.png';
 import ElectricalIcon from '../assets/images/Electrical Hazard_shadow.png';
 import ElectricalHoverIcon from '../assets/images/Electrical Hazard_symbol.png';
+import ElectricalInProgressIcon from '../assets/images/Electrical Hazard_inprogress.png';
+import ElectricalDoneIcon from '../assets/images/Electrical Hazard_done.png';
 import ITIcon from '../assets/images/IT Maintenance_shadow.png';
 import ITHoverIcon from '../assets/images/IT Maintenance_symbol.png';
+import ITInProgressIcon from '../assets/images/IT Maintenance_inprogress.png';
+import ITDoneIcon from '../assets/images/IT Maintenance_done.png';
 import RepairIcon from '../assets/images/Repair_shadow.png';
 import RepairHoverIcon from '../assets/images/Repair_symbol.png';
+import RepairInProgressIcon from '../assets/images/Repair_inprogress.png';
+import RepairDoneIcon from '../assets/images/Repair_done.png';
 import RequestIcon from '../assets/images/Request_shadow.png';
 import RequestHoverIcon from '../assets/images/Request_symbol.png';
+import RequestInProgressIcon from '../assets/images/Request_inprogress.png';
+import RequestDoneIcon from '../assets/images/Request_done.png';
 
 const pinTypes = [
-    { id: 1, label: "Caution", icon: CautionIcon, hoverIcon: CautionHoverIcon },
-    { id: 2, label: "Cleaning", icon: CleaningIcon, hoverIcon: CleaningHoverIcon },
-    { id: 3, label: "Electrical", icon: ElectricalIcon, hoverIcon: ElectricalHoverIcon },
-    { id: 4, label: "IT Maintenance", icon: ITIcon, hoverIcon: ITHoverIcon },
-    { id: 5, label: "Repair", icon: RepairIcon, hoverIcon: RepairHoverIcon },
-    { id: 6, label: "Request", icon: RequestIcon, hoverIcon: RequestHoverIcon },
+    { id: 1, label: "Caution", icon: CautionIcon, hoverIcon: CautionHoverIcon, inProgressIcon: CautionInProgressIcon, doneIcon: CautionDoneIcon },
+    { id: 2, label: "Cleaning", icon: CleaningIcon, hoverIcon: CleaningHoverIcon, inProgressIcon: CleaningInProgressIcon, doneIcon: CleaningDoneIcon },
+    { id: 3, label: "Electrical", icon: ElectricalIcon, hoverIcon: ElectricalHoverIcon, inProgressIcon: ElectricalInProgressIcon, doneIcon: ElectricalDoneIcon },
+    { id: 4, label: "IT Maintenance", icon: ITIcon, hoverIcon: ITHoverIcon, inProgressIcon: ITInProgressIcon, doneIcon: ITDoneIcon },
+    { id: 5, label: "Repair", icon: RepairIcon, hoverIcon: RepairHoverIcon, inProgressIcon: RepairInProgressIcon, doneIcon: RepairDoneIcon },
+    { id: 6, label: "Request", icon: RequestIcon, hoverIcon: RequestHoverIcon, inProgressIcon: RequestInProgressIcon, doneIcon: RequestDoneIcon },
 ];
 
 const FloorContent = ({ areas, showImages, pins, onAreaClick, onPinClick, textStyle, blinkPinId, focusPulse }) => (
@@ -109,8 +121,10 @@ const FloorContent = ({ areas, showImages, pins, onAreaClick, onPinClick, textSt
 
             const pinKey = pin.pinid ?? pin.id;
             const isBlinking = blinkPinId != null && String(pinKey) === String(blinkPinId);
+            const isInProgress = String(pin.status || '').trim().toLowerCase() === 'in progress';
+            const isDone = ['resolved','done','finished','completed'].includes(String(pin.status || '').trim().toLowerCase());
 
-            return (
+    return (
                 <g
                     key={pinKey}
                     transform={`translate(${pin.coordinates.x}, ${pin.coordinates.y})`}
@@ -127,12 +141,14 @@ const FloorContent = ({ areas, showImages, pins, onAreaClick, onPinClick, textSt
                         />
                     )}
                     <image
-                        href={pinType.icon}
+                        href={isDone ? (pinType.doneIcon || pinType.icon) : (isInProgress ? (pinType.inProgressIcon || pinType.icon) : pinType.icon)}
                         width="90"
                         height="90"
                         x="-20"
                         y="-70"
-                        style={isBlinking ? { animation: 'ffBlinkOpacity 0.85s infinite' } : undefined}
+                        style={{
+                          ...(isBlinking ? { animation: 'ffBlinkOpacity 0.85s infinite' } : {})
+                        }}
                     />
                 </g>
             );
@@ -163,11 +179,23 @@ const FloorMap = () => {
     const userRef = useRef(null); // Add ref for user
     const floor1Count = pins.filter(pin => pin.floor === "1").length;
     const floor2Count = pins.filter(pin => pin.floor === "2").length;
+    // Admin dashboard metric (used in the small overlay on the map)
+    const activeJobsCount = pins.filter(p => String(p.status || '').trim().toLowerCase() === 'in progress').length;
     const navigate = useNavigate();
     const location = useLocation();
 
     // When coming from notifications, we can focus + blink a specific pin.
     const [blinkPinId, setBlinkPinId] = useState(null);
+
+    // Blink a pin for a short time (used for newly-accepted "In Progress" pins and
+    // when jumping from notifications).
+    const blinkTimeoutRef = useRef(null);
+    function triggerPinBlink(pinId) {
+        if (pinId == null) return;
+        setBlinkPinId(pinId);
+        if (blinkTimeoutRef.current) clearTimeout(blinkTimeoutRef.current);
+        blinkTimeoutRef.current = setTimeout(() => setBlinkPinId(null), 6500);
+    }
 
     // Coordinate-based focus marker (used by Admin "Go to Map" in Report History)
     const [focusPulse, setFocusPulse] = useState(null);
@@ -180,7 +208,7 @@ const FloorMap = () => {
         const focusCoordinatesRaw = st?.focusCoordinates;
 
         if (focusPinId != null) {
-            setBlinkPinId(focusPinId);
+            triggerPinBlink(focusPinId);
         }
 
         if (focusFloor != null) {
@@ -204,6 +232,12 @@ const FloorMap = () => {
             navigate(location.pathname, { replace: true, state: {} });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            if (blinkTimeoutRef.current) clearTimeout(blinkTimeoutRef.current);
+        };
     }, []);
 
     function safeParseCoordinates(value) {
@@ -343,6 +377,14 @@ const FloorMap = () => {
 
     const handleDeletePin = async () => {
         if (!selectedPin) return;
+
+        // New rule: users cannot delete pins that are already "In Progress".
+        // Only admins can delete/mark them done.
+        const statusNorm = String(selectedPin.status || '').trim().toLowerCase();
+        if (statusNorm === 'in progress' && userRole !== 'admin') {
+            alert('You cannot delete a pin that is already In Progress. Please wait for the admin to mark it as done.');
+            return;
+        }
     
         // Admin confirmation
         if (userRole === 'admin' && !window.confirm('Are you sure you want to delete this pin?')) {
@@ -444,8 +486,15 @@ useEffect(() => {
                 console.log('[DEBUG] Filtering for IT Maintenance pins');
                 query = query.eq('type', 'IT Maintenance');
             } else {
-                console.log('[DEBUG] Filtering for user pins');
-                query = query.eq('user_uid', user?.id);
+                console.log('[DEBUG] Filtering for user + in-progress pins');
+                // Non-admins: show their own pins PLUS any accepted pins (In Progress).
+                // IMPORTANT: This project’s schema (ReportForm.jsx) links reports <-> pins via `pinid`.
+                // RLS can still block non-owner reads; if you have RLS enabled, add a SELECT policy:
+                //   user_uid = auth.uid() OR status = 'In Progress'
+                // NOTE: don't manually URL-encode the space here.
+                // Supabase/PostgREST will handle encoding; using "In%20Progress" can end up double-encoded
+                // and fail to match rows (so other users won't see accepted pins).
+                query = query.or(`user_uid.eq.${user?.id},status.eq.In Progress`);
             }
 
             const { data, error } = await query;
@@ -504,43 +553,67 @@ useEffect(() => {
                     coordinates: safeParseCoordinates(pin.coordinates)
                 });
 
-                let shouldUpdate = false;
-                const pin = payload.new || payload.old;
+                const isVisibleToUser = (pinRow) => {
+                    if (!pinRow) return false;
+                    const role = String(currentRole || '').trim().toLowerCase();
+                    const status = String(pinRow.status || '').trim().toLowerCase();
+                    if (role === 'admin') return true;
+                    if (role === 'it admin') return pinRow.type === 'IT Maintenance';
+                    // Regular users: show their own pins OR any pin that is In Progress.
+                    return pinRow.user_uid === currentUser?.id || status === 'in progress';
+                };
 
-                // Handle different event types
-                switch (payload.eventType) {
-                    case 'INSERT':
-                        if (currentRole === 'admin') {
-                            shouldUpdate = true;
-                        } else if (currentRole === 'it admin') {
-                            shouldUpdate = pin.type === 'IT Maintenance';
-                        } else {
-                            shouldUpdate = pin.user_uid === currentUser?.id;
-                        }
-                        break;
-                    
-                    case 'UPDATE':
-                    case 'DELETE':
-                        // Always process updates/deletes for existing pins
-                        shouldUpdate = true;
-                        break;
-                }
-
-                if (!shouldUpdate) return;
+                const upsertPin = (prev, pinRow) => {
+                    const idx = prev.findIndex(p => p.pinid === pinRow.pinid);
+                    if (idx === -1) return [...prev, pinRow];
+                    const next = [...prev];
+                    next[idx] = pinRow;
+                    return next;
+                };
 
                 // Process the change
                 switch (payload.eventType) {
-                    case 'INSERT':
-                        setPins(prev => [...prev, processPin(payload.new)]);
+                    case 'INSERT': {
+                        const newPin = processPin(payload.new);
+                        if (!isVisibleToUser(newPin)) return;
+                        setPins(prev => upsertPin(prev, newPin));
                         playPinSfx();
+                        // If the inserted pin is already "In Progress" (rare but possible), blink it.
+                        if (String(newPin.status || '').trim().toLowerCase() === 'in progress') {
+                            triggerPinBlink(newPin.pinid);
+                        }
                         break;
-                    case 'UPDATE':
-                        setPins(prev => prev.map(p => 
-                            p.pinid === payload.new.pinid ? processPin(payload.new) : p
-                        ));
+                    }
+                    case 'UPDATE': {
+                        const oldPin = payload.old;
+                        const newPin = processPin(payload.new);
+                        const wasVisible = isVisibleToUser(oldPin);
+                        const nowVisible = isVisibleToUser(newPin);
+
+                        // If it just became visible (e.g., accepted -> In Progress), add it.
+                        if (!wasVisible && nowVisible) {
+                            setPins(prev => upsertPin(prev, newPin));
+                        } else if (wasVisible && !nowVisible) {
+                            // If it became invisible (edge case), remove it.
+                            setPins(prev => prev.filter(p => p.pinid !== newPin.pinid));
+                        } else if (nowVisible) {
+                            // Normal update for visible pins.
+                            setPins(prev => upsertPin(prev, newPin));
+                        }
+
+                        // Blink when it is newly accepted (status transitions to In Progress).
+                        const oldStatus = String(oldPin?.status || '').trim().toLowerCase();
+                        const newStatus = String(newPin?.status || '').trim().toLowerCase();
+                        if (oldStatus !== 'in progress' && newStatus === 'in progress' && nowVisible) {
+                            triggerPinBlink(newPin.pinid);
+                        }
                         break;
-                    case 'DELETE':
+                    }
+                    case 'DELETE': {
                         setPins(prev => prev.filter(p => p.pinid !== payload.old.pinid));
+                        break;
+                    }
+                    default:
                         break;
                 }
             }
@@ -651,8 +724,30 @@ useEffect(() => {
                     Loading Map...
                 </div>
             ) : (
-                <>
-                    <div style={responsiveStyles.controlButtons}>
+                <> 
+                    {(userRole === 'admin' || userRole === 'it admin') && (
+                        <div style={{
+                            position: 'fixed',
+                            top: '80px',
+                            right: '16px',
+                            zIndex: 1002,
+                            pointerEvents: 'none'
+                        }}>
+                            <div style={{
+                                background: '#1D3557',
+                                color: '#fae6cfff',
+                                padding: '10px 14px',
+                                borderRadius: '14px',
+                                boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+                                fontFamily: 'Poppins',
+                                minWidth: '160px'
+                            }}>
+                                <div style={{ fontSize: '12px', opacity: 0.9 }}>Active jobs</div>
+                                <div style={{ fontSize: '26px', fontWeight: 700, lineHeight: 1 }}>{activeJobsCount}</div>
+                            </div>
+                        </div>
+                    )}
+<div style={responsiveStyles.controlButtons}>
                        
  {/* Notification Banner (Students/Faculty only) */}
  {(userRole !== 'admin' && userRole !== 'it admin') && (
@@ -996,4 +1091,3 @@ useEffect(() => {
 };
 
 export default FloorMap;
-
