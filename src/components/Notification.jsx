@@ -292,7 +292,24 @@ const NotificationPage = () => {
       <DialogActions sx={{ px: 2, py: 1.5, gap: 1, flexWrap: 'wrap' }}>
         <Button onClick={closeDetails} variant="outlined">Close</Button>
         <Button
-          onClick={() => { closeDetails(); navigate('/dashboard'); }}
+          onClick={() => {
+            // Some deployments store pin/report references on the notification row.
+            // We pass it through if present so the Map can focus + blink the pin.
+            const focusPinId =
+              selectedNotification?.pinid ??
+              selectedNotification?.pin_id ??
+              selectedNotification?.pinId ??
+              selectedNotification?.report_pinid ??
+              selectedNotification?.reportPinId ??
+              null;
+
+            closeDetails();
+            if (focusPinId) {
+              navigate('/dashboard', { state: { focusPinId } });
+            } else {
+              navigate('/dashboard');
+            }
+          }}
           variant="contained"
         >
           Open Map

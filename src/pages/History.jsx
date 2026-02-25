@@ -2261,6 +2261,7 @@ import { useTheme } from '@mui/material/styles';
 import Navbar from '../components/Navbar';
 import supabase from "../helper/supabaseClient";
 import CircularProgress from '@mui/material/CircularProgress';
+import MapIcon from '@mui/icons-material/Map';
 import { pdf } from '@react-pdf/renderer';
 import { PDFReport, MultiPDFReport } from '../helper/PDFReport';
 
@@ -2500,14 +2501,49 @@ const History = () => {
 
     const handleDeleteReport = async (reportId) => {
         try {
-            const { error } = await supabase
+            // Fetch report first so we can delete its pin + notify the owner.
+            const { data: reportRow, error: fetchErr } = await supabase
+                .from('reports')
+                .select('id, pinid, user_uid, title, specific_place, type')
+                .eq('id', reportId)
+                .maybeSingle();
+
+            if (fetchErr) throw fetchErr;
+            if (!reportRow) return;
+
+            // If admin/IT admin deletes, also delete the corresponding pin.
+            if (reportRow.pinid) {
+                await supabase
+                    .from('pins')
+                    .delete()
+                    .eq('pinid', reportRow.pinid);
+            }
+
+            // Delete the report.
+            const { error: delErr } = await supabase
                 .from('reports')
                 .delete()
                 .eq('id', reportId);
 
-            if (!error) {
-                setReports(reports.filter(report => report.id !== reportId));
+            if (delErr) throw delErr;
+
+            // Notify the report owner (students/faculty) if someone removed their pin/report.
+            // We keep this lightweight (no UI change) and rely on existing notifications page.
+            const actorRole = (formData.role || '').trim().toLowerCase();
+            const isAdminActor = actorRole === 'admin' || actorRole === 'it admin';
+            if (isAdminActor && reportRow.user_uid) {
+                const place = reportRow.specific_place ? ` at ${reportRow.specific_place}` : '';
+                const title = reportRow.title ? `"${reportRow.title}"` : 'your report';
+                await supabase
+                    .from('notifications')
+                    .insert([{
+                        user_id: reportRow.user_uid,
+                        message: `An admin removed ${title}${place}.`,
+                        type: 'status_update'
+                    }]);
             }
+
+            setReports(reports.filter(report => report.id !== reportId));
         } catch (error) {
             console.error('Error deleting report:', error);
         }
@@ -2778,6 +2814,28 @@ const History = () => {
                                             flexDirection: { xs: 'column', sm: 'row' },
                                             width: { xs: '100%', sm: 'auto' }
                                         }}>
+                                            {(formData.role?.trim().toLowerCase() === 'admin' || formData.role?.trim().toLowerCase() === 'it admin') && (
+                                                <Button
+                                                    startIcon={<MapIcon />}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        // Jump to Map and focus the report's pin (if present).
+                                                        navigate('/dashboard', {
+                                                            state: {
+                                                                focusPinId: report.pinid ?? null,
+                                                                // These help Map choose the correct floor even if pins haven't loaded yet.
+                                                                focusFloor: report.floor ?? null,
+                                                                focusCoordinates: report.coordinates ?? null,
+                                                            }
+                                                        });
+                                                    }}
+                                                    fullWidth={isMobile}
+                                                    size={isMobile ? "small" : "medium"}
+                                                    variant={isMobile ? "outlined" : "text"}
+                                                >
+                                                    Go to Map
+                                                </Button>
+                                            )}
                                             <Button
                                                 startIcon={<FaPrint />}
                                                 onClick={(e) => {

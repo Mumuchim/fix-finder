@@ -12,7 +12,7 @@ import {
     Button,
   } from "@mui/material";
 import { FaTimes } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import MapIcon from '@mui/icons-material/Map';
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
 import Report from './ReportForm'; // Import the ReportForm component
@@ -40,7 +40,7 @@ const pinTypes = [
     { id: 6, label: "Request", icon: RequestIcon, hoverIcon: RequestHoverIcon },
 ];
 
-const FloorContent = ({ areas, showImages, pins, onAreaClick, onPinClick, textStyle }) => (
+const FloorContent = ({ areas, showImages, pins, onAreaClick, onPinClick, textStyle, blinkPinId, focusPulse }) => (
     <svg
         width="100%"
         height="100%"
@@ -48,6 +48,25 @@ const FloorContent = ({ areas, showImages, pins, onAreaClick, onPinClick, textSt
         preserveAspectRatio="xMidYMid meet"
         xmlns="http://www.w3.org/2000/svg"
     >
+        <style>{`
+          @keyframes ffBlinkOpacity {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.25; }
+          }
+        `}</style>
+
+        {/* Optional focus marker (used when admin clicks "Go to Map" from Report History) */}
+        {focusPulse && (
+            <g transform={`translate(${focusPulse.x}, ${focusPulse.y})`} style={{ pointerEvents: 'none' }}>
+                <circle
+                    cx="0"
+                    cy="0"
+                    r="34"
+                    fill="rgba(230, 57, 70, 0.25)"
+                    style={{ animation: 'ffBlinkOpacity 0.85s infinite' }}
+                />
+            </g>
+        )}
         {areas.map((area) => (
             <g
                 key={area.id}
@@ -88,19 +107,32 @@ const FloorContent = ({ areas, showImages, pins, onAreaClick, onPinClick, textSt
             const pinType = pinTypes.find(pt => pt.label === pin.type);
             if (!pinType) return null;
 
+            const pinKey = pin.pinid ?? pin.id;
+            const isBlinking = blinkPinId != null && String(pinKey) === String(blinkPinId);
+
             return (
                 <g
-                    key={pin.pinid ?? pin.id}
+                    key={pinKey}
                     transform={`translate(${pin.coordinates.x}, ${pin.coordinates.y})`}
                     onClick={() => onPinClick(pin)}
                     style={{ cursor: "pointer" }}
                 >
+                    {isBlinking && (
+                        <circle
+                            cx="0"
+                            cy="0"
+                            r="34"
+                            fill="rgba(230, 57, 70, 0.25)"
+                            style={{ animation: 'ffBlinkOpacity 0.85s infinite' }}
+                        />
+                    )}
                     <image
                         href={pinType.icon}
                         width="90"
                         height="90"
                         x="-20"
                         y="-70"
+                        style={isBlinking ? { animation: 'ffBlinkOpacity 0.85s infinite' } : undefined}
                     />
                 </g>
             );
@@ -132,15 +164,56 @@ const FloorMap = () => {
     const floor1Count = pins.filter(pin => pin.floor === "1").length;
     const floor2Count = pins.filter(pin => pin.floor === "2").length;
     const navigate = useNavigate();
+    const location = useLocation();
 
-    const safeParseCoordinates = (value) => {
+    // When coming from notifications, we can focus + blink a specific pin.
+    const [blinkPinId, setBlinkPinId] = useState(null);
+
+    // Coordinate-based focus marker (used by Admin "Go to Map" in Report History)
+    const [focusPulse, setFocusPulse] = useState(null);
+
+    // Capture focus state from route state (and clear it so refresh doesn't keep re-triggering)
+    useEffect(() => {
+        const st = location?.state || {};
+        const focusPinId = st?.focusPinId;
+        const focusFloor = st?.focusFloor;
+        const focusCoordinatesRaw = st?.focusCoordinates;
+
+        if (focusPinId != null) {
+            setBlinkPinId(focusPinId);
+        }
+
+        if (focusFloor != null) {
+            const nf = Number(focusFloor);
+            if (!Number.isNaN(nf)) setCurrentFloor(nf);
+        }
+
+        if (focusCoordinatesRaw != null) {
+            const parsed = safeParseCoordinates(focusCoordinatesRaw);
+            if (parsed && typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+                const nf = Number(focusFloor);
+                setFocusPulse({
+                    x: parsed.x,
+                    y: parsed.y,
+                    floor: !Number.isNaN(nf) ? nf : currentFloor,
+                });
+            }
+        }
+
+        if (focusPinId != null || focusFloor != null || focusCoordinatesRaw != null) {
+            navigate(location.pathname, { replace: true, state: {} });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    function safeParseCoordinates(value) {
         try {
             if (value == null) return null;
             return typeof value === 'string' ? JSON.parse(value) : value;
         } catch {
             return null;
         }
-    };
+    }
 
     useEffect(() => {
         userRoleRef.current = userRole;
@@ -194,6 +267,17 @@ const FloorMap = () => {
     };
 
     const handlePinClick = (pin) => {
+        // If we're currently blinking this pin (focused from notification), stop blinking on click.
+        const pinKey = pin?.pinid ?? pin?.id;
+        if (blinkPinId != null && String(pinKey) === String(blinkPinId)) {
+            setBlinkPinId(null);
+        }
+
+        // Stop coordinate-focus marker once user interacts.
+        if (focusPulse) {
+            setFocusPulse(null);
+        }
+
         if (selectedPin && selectedPin.id === pin.id) {
             setShowConfirmation(true);
         } else {
@@ -266,12 +350,38 @@ const FloorMap = () => {
         }
     
         try {
+            // Fetch related report so we can notify the owner and clean up reports table.
+            const { data: reportRow } = await supabase
+                .from('reports')
+                .select('user_uid, title, specific_place')
+                .eq('pinid', selectedPin.pinid)
+                .maybeSingle();
+
             const { error } = await supabase
                 .from('pins')
                 .delete()
                 .eq('pinid', selectedPin.pinid);
     
             if (error) throw error;
+
+            // Also remove the report row(s) tied to this pin (keeps DB consistent)
+            await supabase
+                .from('reports')
+                .delete()
+                .eq('pinid', selectedPin.pinid);
+
+            // Notify the report owner (students/faculty) that their pin was removed.
+            if (reportRow?.user_uid) {
+                const place = reportRow.specific_place ? ` at ${reportRow.specific_place}` : '';
+                const title = reportRow.title ? `"${reportRow.title}"` : 'your report';
+                await supabase
+                    .from('notifications')
+                    .insert([{
+                        user_id: reportRow.user_uid,
+                        message: `An admin removed ${title}${place}.`,
+                        type: 'status_update'
+                    }]);
+            }
     
             setPins(prev => prev.filter(pin => pin.pinid !== selectedPin.pinid));
             handleCloseModal();
@@ -363,6 +473,18 @@ useEffect(() => {
         fetchPins();
     }
 }, [userRole]);
+
+// If we were asked to focus a pin (from notification), ensure we're on the right floor.
+useEffect(() => {
+    if (blinkPinId == null) return;
+    const match = pins.find(p => String(p.pinid ?? p.id) === String(blinkPinId));
+    if (!match) return;
+
+    const pinFloor = Number(match.floor);
+    if (!Number.isNaN(pinFloor) && pinFloor !== currentFloor) {
+        setCurrentFloor(pinFloor);
+    }
+}, [blinkPinId, pins, currentFloor]);
 
 useEffect(() => {
     const channel = supabase
@@ -532,8 +654,9 @@ useEffect(() => {
                 <>
                     <div style={responsiveStyles.controlButtons}>
                        
- {/* Notification Banner */}
- <div style={{
+ {/* Notification Banner (Students/Faculty only) */}
+ {(userRole !== 'admin' && userRole !== 'it admin') && (
+   <div style={{
         position: 'fixed',
         top: '80px',
         left: '50%',
@@ -564,6 +687,7 @@ useEffect(() => {
           </Alert>
         </Collapse>
       </div>
+ )}
 {/* Add this div wherever you want to display the user info */}
 <div 
   style={{
@@ -661,6 +785,8 @@ useEffect(() => {
                             onAreaClick={handleAreaClick}
                             onPinClick={handlePinClick}
                             textStyle={responsiveStyles.pinText}
+                            blinkPinId={blinkPinId}
+                            focusPulse={(focusPulse && Number(focusPulse.floor) === Number(currentFloor)) ? focusPulse : null}
                         />
                     </div>
 
