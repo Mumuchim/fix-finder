@@ -1,0 +1,2877 @@
+// const FloorContent = ({ areas, showImages, pins, onAreaClick, onPinClick, textStyle }) => (
+//     <svg
+//         width="100%"
+//         height="100%"
+//         viewBox="0 0 1080 1080"
+//         preserveAspectRatio="xMidYMid meet"
+//         xmlns="http://www.w3.org/2000/svg"
+//     >
+//         {areas.map((area) => (
+//             <g
+//                 key={area.id}
+//                 onClick={(e) => onAreaClick(e, area)}
+//                 style={{ cursor: "pointer" }}
+//             >
+//                 <rect
+//                     x={area.x}
+//                     y={area.y}
+//                     width={area.width}
+//                     height={area.height}
+//                     fill={area.color}
+//                     stroke="black"
+//                 />
+//                 {showImages && area.image && (
+//                     <image
+//                         x={area.x}
+//                         y={area.y}
+//                         width={area.width}
+//                         height={area.height}
+//                         href={area.image}
+//                     />
+//                 )}
+//                 <text
+//                     x={area.x + area.width / 2}
+//                     y={area.y + area.height / 2}
+//                     textAnchor="middle"
+//                     dominantBaseline="middle"
+//                     {...textStyle}
+//                 >
+//                     {area.label}
+//                 </text>
+//             </g>
+//         ))}
+//         {pins.map((pin) => (
+//             <circle
+//                 key={pin.id}
+//                 cx={pin.coordinates.x}
+//                 cy={pin.coordinates.y}
+//                 r="clamp(20px, 3vw, 30px)"
+//                 fill="red"
+//                 stroke="black"
+//                 onClick={() => onPinClick(pin)}
+//             />
+//         ))}
+//     </svg>
+// );
+
+
+ // const handleClick = async (e) => {
+    //     e.preventDefault();
+
+    //     // Check if required fields are filled
+    //     if (!report.title || !report.details || !report.type) {
+    //         setError(true);
+    //         return;
+    //     }
+
+    //     try {
+    //         // Insert report into Supabase
+    //         const { error: insertError } = await supabase.from("reports").insert({
+    //             title: report.title,
+    //             details: report.details,
+    //             type: report.type,
+    //             status: report.status,
+    //             user_uid: userId, // Use the userId from Supabase directly
+    //             name: `${userData?.fname || ""} ${userData?.lname || ""}`, // Ensure name is being passed
+    //             coordinates: report.coordinates,
+    //             floor: report.floor,
+    //             pinid: report.pinId,
+    //             image: report.image, // Save the uploaded image URL in the report
+    //         });
+
+    //         if (insertError) throw insertError;
+
+    //         setOpen(false);
+    //         setOpenSnackbar(true);
+    //         setError(false);
+    //         resetForm();
+    //     } catch (err) {
+    //         console.error("Error submitting report:", err.message);
+    //         setError(true);
+    //     }
+    // };
+
+
+        // useEffect(() => {
+    //     const fetchPins = async () => {
+    //         try {
+    //             setIsLoading(true);
+    //             const { data: { user } } = await supabase.auth.getUser();
+    //             const { data, error } = await supabase
+    //                 .from("pins")
+    //                 .select("*")
+    //                 .eq("user_uid", user.id);
+
+    //             if (error) throw error;
+
+    //             const parsedPins = data.map((pin) => ({
+    //                 ...pin,
+    //                 coordinates: pin.coordinates ? JSON.parse(pin.coordinates) : { x: 0, y: 0 }
+    //             }));
+
+    //             setPins(parsedPins);
+    //         } catch (err) {
+    //             console.error("Error fetching pins:", err.message);
+    //         } finally {
+    //             setIsLoading(false);
+    //         }
+    //     };
+
+    //     fetchPins();
+    // }, []);
+
+
+  // const handleClick = async (e) => {
+    //     e.preventDefault();
+    //     let newErrors = {};
+
+    //     // Validate each field separately
+    //     if (!report.title) newErrors.title = "Title is required.";
+    //     if (!report.details) newErrors.details = "Details are required.";
+    //     if (!report.type) newErrors.type = "Type is required.";
+
+    //     // If there are errors, update state and stop submission
+    //     if (Object.keys(newErrors).length > 0) {
+    //         setErrors(newErrors);
+    //         return;
+    //     }
+
+    //     try {
+    //         const { error: insertError } = await supabase.from("reports").insert({
+    //             title: report.title,
+    //             details: report.details,
+    //             type: report.type,
+    //             status: report.status,
+    //             user_uid: userId,
+    //             name: `${userData?.fname || ""} ${userData?.lname || ""}`,
+    //             coordinates: report.coordinates,
+    //             floor: report.floor,
+    //             pinid: report.pinId,
+    //             image: report.image,
+    //         });
+
+    //         //   Insert data into the pins table
+    //         const { error: insertError } = await supabase.from("pins").upsert({
+    //             pinid: report.pinId, // Pin ID to update or insert
+    //             coordinates: report.coordinates,
+    //             user_uid: userId, // User UID from the current user
+    //             floor: report.floor, // Floor value
+    //         });
+
+    //         if (insertError) throw insertError;
+
+    //         setOpen(false);
+    //         setOpenSnackbar(true);
+    //         setErrors({});
+    //         resetForm();
+    //     } catch (err) {
+    //         console.error("Error submitting report:", err.message);
+    //     }
+    // };
+
+
+    // const confirmPinPlacement = () => {
+    //     if (selectedPinType && selectedPosition) {
+    //         const newPin = {
+    //             id: Date.now(), // Unique ID for the pin
+    //             type: selectedPinType.label,
+    //             coordinates: selectedPosition,
+    //             status: "Pending", // Default status
+    //             floor: String(currentFloor), // Store the current floor
+    //             status: "Pending", // Default status
+    //         };
+
+    //         console.log(newPin); // For debugging
+
+
+    //         setPins((prevPins) => [...prevPins, newPin]);
+    //         setShowConfirmation(false);
+    //         setShowPinModal(false);
+    //         setShowReportModal(true); // Open ReportForm modal
+    //     }
+    // };
+
+    // import React, { useState, useEffect } from "react";
+// import PinSidebar from "./PinSidebar";
+// import { areas1, areas2 } from "../helper/areas";
+// import supabase from "../helper/supabaseClient";
+// import CircularProgress from "@mui/material/CircularProgress";
+// import Modal from "@mui/material/Modal";
+// import Button from "@mui/material/Button";
+// import { useNavigate } from "react-router-dom";
+// import MapIcon from '@mui/icons-material/Map';
+// import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
+
+// // Reusable ToggleButton Component
+// const ToggleButton = ({ label, onClick, isActive }) => (
+//     <button
+//         style={{
+//             padding: "10px 20px",
+//             margin: "5px",
+//             backgroundColor: isActive ? "#4CAF50" : "#333",
+//             color: "#fff",
+//             border: "none",
+//             borderRadius: "5px",
+//             cursor: "pointer",
+//             fontWeight: isActive ? "bold" : "normal",
+//         }}
+//         onClick={onClick}
+//     >
+//         {label}
+//     </button>
+// );
+
+// // FloorContent Component to Encapsulate SVG Logic
+// const FloorContent = ({ areas, showImages, pins, onAreaClick, onPinClick }) => (
+//     <svg
+//         width="100%"
+//         height="100%"
+//         viewBox="0 0 1080 1080"
+//         preserveAspectRatio="xMidYMid meet"
+//         xmlns="http://www.w3.org/2000/svg"
+//     >
+//         {areas.map((area) => (
+//             <g
+//                 key={area.id}
+//                 onClick={(e) => {
+//                     e.stopPropagation();
+//                     onAreaClick(area.label);
+//                 }}
+//                 style={{ cursor: "pointer" }}
+//             >
+//                 <rect
+//                     x={area.x}
+//                     y={area.y}
+//                     width={area.width}
+//                     height={area.height}
+//                     fill={area.color}
+//                     stroke="black"
+//                 />
+//                 {showImages && area.image && (
+//                     <image
+//                         x={area.x}
+//                         y={area.y}
+//                         width={area.width}
+//                         height={area.height}
+//                         href={area.image}
+//                     />
+//                 )}
+//                 {!showImages && (
+//                     <text
+//                         x={area.x + area.width / 2}
+//                         y={area.y + area.height / 2}
+//                         textAnchor="middle"
+//                         dominantBaseline="middle"
+//                         fontSize="16"
+//                         fontWeight="bold"
+//                         fill="black"
+//                     >
+
+//                     </text>
+//                 )}
+//                 <text
+//                     x={area.x + area.width / 2}
+//                     y={area.y + area.height / 2}
+//                     textAnchor="middle"
+//                     dominantBaseline="middle"
+//                     fontSize="18"
+//                     fontFamily="Poppins"
+//                     fill="black"
+//                     fontWeight="bold" // Makes the black text thicker/bold
+//                     stroke="#D3D3D3"
+//                     strokeWidth="5"
+//                     paintOrder="stroke fill"
+//                 >
+//                     {area.label}
+//                 </text>
+//             </g>
+//         ))}
+//         {pins.map((pin) =>
+//             pin.coordinates && pin.coordinates.x && pin.coordinates.y ? (
+//                 <circle
+//                     key={pin.id}
+//                     cx={pin.coordinates.x}
+//                     cy={pin.coordinates.y}
+//                     r={30}
+//                     fill="red"
+//                     stroke="black"
+//                     onClick={() => onPinClick(pin)}
+//                 />
+//             ) : null
+//         )}
+//     </svg>
+// );
+
+// // Main Component
+// const FloorMap = () => {
+//     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+//     const [pins, setPins] = useState([]);
+//     const [clickedArea, setClickedArea] = useState(null);
+//     const [isLoading, setIsLoading] = useState(true);
+//     const [loadingAction, setLoadingAction] = useState(false);
+//     const [selectedPin, setSelectedPin] = useState(null);
+//     const [openModal, setOpenModal] = useState(false);
+//     const [currentFloor, setCurrentFloor] = useState(1);
+//     const [showImages, setShowImages] = useState(true);
+//     const [isFloorHovered, setIsFloorHovered] = useState(false); // Hover state for the floor button
+//     const [isImagesHovered, setIsImagesHovered] = useState(false)
+
+//     const navigate = useNavigate();
+
+//     const toggleFloor = () => {
+//         setLoadingAction(true);
+//         setTimeout(() => {
+//             setCurrentFloor((prev) => (prev === 1 ? 2 : 1));
+//             setLoadingAction(false);
+//         }, 500); // Simulate loading for 500ms
+//     };
+
+//     const toggleImages = () => {
+//         setLoadingAction(true);
+//         setTimeout(() => {
+//             setShowImages((prev) => !prev);
+//             setLoadingAction(false);
+//         }, 500); // Simulate loading for 500ms
+//     };
+
+//     const handleAreaClick = (areaLabel) => {
+//         setClickedArea(areaLabel);
+//         setIsSidebarOpen(true);
+//     };
+
+//     const handleSidebarClose = () => {
+//         setIsSidebarOpen(false);
+//         setClickedArea(null);
+//     };
+
+//     const handlePinClick = (pin) => {
+//         setSelectedPin(pin);
+//         setOpenModal(true);
+//     };
+
+//     const handleCloseModal = () => {
+//         setOpenModal(false);
+//         setSelectedPin(null);
+//     };
+
+//     useEffect(() => {
+//         const fetchPins = async () => {
+//             try {
+//                 setIsLoading(true);
+
+//                 const {
+//                     data: { user },
+//                     error: userError,
+//                 } = await supabase.auth.getUser();
+//                 if (userError || !user) throw new Error("Failed to fetch user.");
+
+//                 const { data, error } = await supabase
+//                     .from("pins")
+//                     .select("*")
+//                     .eq("user_uid", user.id);
+//                 if (error) throw error;
+
+//                 const parsedPins = data.map((pin) => {
+//                     let coordinates = { x: 0, y: 0 };
+//                     if (pin.coordinates) {
+//                         try {
+//                             const parsedCoordinates = JSON.parse(pin.coordinates);
+//                             coordinates = {
+//                                 x: parseInt(parsedCoordinates.left.replace("px", ""), 10) || 0,
+//                                 y: parseInt(parsedCoordinates.top.replace("px", ""), 10) || 0,
+//                             };
+//                         } catch (err) {
+//                             console.error("Error parsing coordinates JSON:", err);
+//                         }
+//                     }
+//                     return { ...pin, coordinates };
+//                 });
+
+//                 setPins(parsedPins);
+//             } catch (err) {
+//                 console.error("Error fetching pins:", err.message);
+//             } finally {
+//                 setIsLoading(false);
+//             }
+//         };
+
+//         fetchPins();
+//     }, []);
+
+//     const areasToDisplay = currentFloor === 1 ? areas1 : areas2;
+
+//     return (
+//         <div
+//             style={{
+//                 position: "fixed",
+//                 top: 0,
+//                 left: 0,
+//                 width: "100vw",
+//                 height: "100vh",
+//                 display: "flex",
+//                 justifyContent: "center",
+//                 alignItems: "center",
+//                 overflow: "hidden",
+//             }}
+//         >
+//             {(isLoading || loadingAction) ? (
+//                 <div
+//                     style={{
+//                         display: "flex",
+//                         alignItems: "center",
+//                         justifyContent: "center",
+//                         height: "100%",
+//                         fontSize: "20px",
+//                         fontWeight: "bold",
+//                         color: "rgba(0, 0, 0, 0.7)",
+//                     }}
+//                 >
+//                     <CircularProgress size="4rem" style={{ marginRight: "1rem" }} />
+//                     Loading content...
+//                 </div>
+//             ) : (
+//                 <>
+//                     <div
+//                         style={{
+//                             position: "absolute",
+//                             bottom: "5%", // Positioned relative to the viewport height
+//                             right: "5%", // Positioned relative to the viewport width
+//                             display: "flex",
+//                             flexDirection: "column", // Stack buttons vertically
+//                             gap: "10px", // Space between buttons
+//                             zIndex: 10,
+//                         }}
+//                     >
+//                         <button
+//                             style={{
+//                                 padding: "10px 20px", // Responsive padding
+//                                 fontSize: "clamp(14px, 2vw, 18px)", // Responsive font size
+//                                 backgroundColor: isFloorHovered ? "#1D3557" : "#457B9D", // Change color on hover
+//                                 color: "#fae6cfff",
+//                                 border: "none",
+//                                 borderRadius: "8px", // Rounded corners
+//                                 cursor: "pointer",
+//                                 width: "clamp(120px, 20vw, 200px)", // Responsive width
+//                                 display: "flex", // Use flexbox
+//                                 alignItems: "center", // Align items vertically
+//                                 justifyContent: "center", // Center content horizontally
+//                                 gap: "10px", // Add space between icon and text
+//                                 transition: "background-color 0.3s ease", // Smooth hover transition
+//                             }}
+//                             onMouseEnter={() => setIsFloorHovered(true)} // Set hover state for floor button
+//                             onMouseLeave={() => setIsFloorHovered(false)} // Reset hover state for floor button
+//                             onClick={toggleFloor}
+//                         >
+//                             <MapIcon style={{ fontSize: "clamp(16px, 2vw, 24px)" }} /> {/* Adjust icon size */}
+//                             Change to Floor {currentFloor === 1 ? 2 : 1}
+//                         </button>
+
+//                         <button
+//                             style={{
+//                                 padding: "10px 20px", // Responsive padding
+//                                 fontSize: "clamp(14px, 2vw, 18px)", // Responsive font size
+//                                 backgroundColor: isImagesHovered ? "#1D3557" : "#457B9D", // Change color on hover
+//                                 color: "#fae6cfff",
+//                                 border: "none",
+//                                 borderRadius: "8px", // Rounded corners
+//                                 cursor: "pointer",
+//                                 width: "clamp(120px, 20vw, 200px)", // Responsive width
+//                                 display: "flex", // Use flexbox
+//                                 alignItems: "center", // Align items vertically
+//                                 justifyContent: "center", // Center content horizontally
+//                                 gap: "10px", // Add space between icon and text
+//                                 transition: "background-color 0.3s ease", // Smooth hover transition
+//                             }}
+//                             onMouseEnter={() => setIsImagesHovered(true)} // Set hover state for images button
+//                             onMouseLeave={() => setIsImagesHovered(false)} // Reset hover state for images button
+//                             onClick={toggleImages}
+//                         >
+//                             <ChangeCircleIcon style={{ fontSize: "clamp(16px, 2vw, 24px)" }} /> {/* Adjust icon size */}
+//                             {showImages ? "Switch Style" : "Switch Style"}
+//                         </button>
+//                     </div>
+//                     <div
+//                         style={{
+//                             width: "100vw",
+//                             height: "100vh",
+//                             display: "flex",
+//                             justifyContent: "center",
+//                             alignItems: "center",
+//                         }}
+//                     >
+//                         <FloorContent
+//                             areas={areasToDisplay}
+//                             showImages={showImages}
+//                             pins={pins}
+//                             onAreaClick={handleAreaClick}
+//                             onPinClick={handlePinClick}
+//                         />
+//                     </div>
+//                     {clickedArea && (
+//                         <div
+//                             style={{
+//                                 position: "absolute",
+//                                 bottom: "20px",
+//                                 backgroundColor: "rgba(0, 0, 0, 0.8)",
+//                                 color: "#fff",
+//                                 padding: "10px 20px",
+//                                 borderRadius: "5px",
+//                                 fontSize: "16px",
+//                             }}
+//                         >
+//                             {`You clicked on: ${clickedArea}`}
+//                         </div>
+//                     )}
+//                 </>
+//             )}
+//             <Modal
+//                 open={openModal}
+//                 onClose={handleCloseModal}
+//                 aria-labelledby="pin-details-modal"
+//                 aria-describedby="pin-status-remove-close"
+//             >
+//                 <div
+//                     style={{
+//                         position: "absolute",
+//                         top: "50%",
+//                         left: "50%",
+//                         transform: "translate(-50%, -50%)",
+//                         backgroundColor: "#A8DADC",
+//                         padding: "20px",
+//                         borderRadius: "8px",
+//                         width: "300px",
+//                         color: "#1D3557",
+//                     }}
+//                 >
+//                     <h2>Pin Details</h2>
+//                     {selectedPin && <p><strong>Pin ID:</strong> {selectedPin.id}</p>}
+//                     <Button variant="outlined" onClick={handleCloseModal}>
+//                         Close
+//                     </Button>
+//                 </div>
+//             </Modal>
+//             <PinSidebar isOpen={isSidebarOpen} setIsOpen={handleSidebarClose} />
+//         </div>
+//     );
+// };
+
+// export default FloorMap;
+
+// import React, { useState, useEffect, useCallback } from "react";
+// import PinSidebar from "./PinSidebar";
+// import { areas1, areas2 } from "../helper/areas";
+// import supabase from "../helper/supabaseClient";
+// import CircularProgress from "@mui/material/CircularProgress";
+// import Modal from "@mui/material/Modal";
+// import Button from "@mui/material/Button";
+// import { useNavigate } from "react-router-dom";
+// import MapIcon from '@mui/icons-material/Map';
+// import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
+
+// // Import your icons
+// import CautionIcon from '../assets/images/Caution_noshadow.png';
+// import CautionHoverIcon from '../assets/images/Caution_symbol.png';
+// import CleaningIcon from '../assets/images/Cleaning_shadow.png';
+// import CleaningHoverIcon from '../assets/images/Cleaning_symbol.png';
+// import ElectricalIcon from '../assets/images/Electrical Hazard_shadow.png';
+// import ElectricalHoverIcon from '../assets/images/Electrical Hazard_symbol.png';
+// import ITIcon from '../assets/images/IT Maintenance_shadow.png';
+// import ITHoverIcon from '../assets/images/IT Maintenance_symbol.png';
+// import RepairIcon from '../assets/images/Repair_shadow.png';
+// import RepairHoverIcon from '../assets/images/Repair_symbol.png';
+// import RequestIcon from '../assets/images/Request_shadow.png';
+// import RequestHoverIcon from '../assets/images/Request_symbol.png';
+
+// // Reusable ToggleButton Component
+// const ToggleButton = ({ label, onClick, isActive }) => (
+//     <button
+//         style={{
+//             padding: "10px 20px",
+//             margin: "5px",
+//             backgroundColor: isActive ? "#4CAF50" : "#333",
+//             color: "#fff",
+//             border: "none",
+//             borderRadius: "5px",
+//             cursor: "pointer",
+//             fontWeight: isActive ? "bold" : "normal",
+//         }}
+//         onClick={onClick}
+//     >
+//         {label}
+//     </button>
+// );
+
+// // FloorContent Component to Encapsulate SVG Logic
+// const FloorContent = ({
+//     areas,
+//     showImages,
+//     pins,
+//     onAreaClick,
+//     onPinClick,
+//     selectedPinForMove,
+//     onPinMouseDown,
+//     onMouseMove,
+//     onMouseUp,
+//     onMouseLeave,
+//     icons,
+// }) => (
+//     <svg
+//         width="100%"
+//         height="100%"
+//         viewBox="0 0 1080 1080"
+//         preserveAspectRatio="xMidYMid meet"
+//         xmlns="http://www.w3.org/2000/svg"
+//         onMouseMove={onMouseMove}
+//         onMouseUp={onMouseUp}
+//         onMouseLeave={onMouseLeave}
+//     >
+//         {areas.map((area) => (
+//             <g
+//                 key={area.id}
+//                 onClick={(e) => {
+//                     e.stopPropagation();
+//                     onAreaClick(area);
+//                 }}
+//                 style={{ cursor: "pointer" }}
+//             >
+//                 <rect
+//                     x={area.x}
+//                     y={area.y}
+//                     width={area.width}
+//                     height={area.height}
+//                     fill={area.color}
+//                     stroke="black"
+//                 />
+//                 {showImages && area.image && (
+//                     <image
+//                         x={area.x}
+//                         y={area.y}
+//                         width={area.width}
+//                         height={area.height}
+//                         href={area.image}
+//                     />
+//                 )}
+//                 {!showImages && (
+//                     <text
+//                         x={area.x + area.width / 2}
+//                         y={area.y + area.height / 2}
+//                         textAnchor="middle"
+//                         dominantBaseline="middle"
+//                         fontSize="16"
+//                         fontWeight="bold"
+//                         fill="black"
+//                     >
+//                         {area.label}
+//                     </text>
+//                 )}
+//             </g>
+//         ))}
+
+//         {/* Render pins as icons */}
+//         {pins.map((pin) => (
+//             <image
+//                 key={pin.id}
+//                 x={pin.coordinates.x - 25} // Center the icon
+//                 y={pin.coordinates.y - 25}
+//                 width={50} // Set icon size
+//                 height={50}
+//                 href={pin.iconSrc} // Use the icon source from the pin data
+//                 onClick={() => onPinClick(pin)}
+//                 onMouseDown={(e) => onPinMouseDown(pin.id, e)}
+//                 style={{
+//                     cursor: selectedPinForMove === pin.id ? "move" : "pointer",
+//                     transition: "all 0.3s ease",
+//                 }}
+//             />
+//         ))}
+
+//         {/* Render additional icons */}
+//         {icons.map((icon, index) => (
+//             <image
+//                 key={index}
+//                 x={icon.x}
+//                 y={icon.y}
+//                 width={icon.width || 100} // Default size if not provided
+//                 height={icon.height || 100}
+//                 href={icon.src}
+//                 onClick={() => onIconClick(icon)}
+//                 style={{ cursor: "pointer" }}
+//             />
+//         ))}
+//     </svg>
+// );
+
+// // Main Component
+// const FloorMap = () => {
+//     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+//     const [pins, setPins] = useState([]);
+//     const [clickedArea, setClickedArea] = useState(null);
+//     const [isLoading, setIsLoading] = useState(true);
+//     const [loadingAction, setLoadingAction] = useState(false);
+//     const [selectedPin, setSelectedPin] = useState(null);
+//     const [openModal, setOpenModal] = useState(false);
+//     const [currentFloor, setCurrentFloor] = useState(1);
+//     const [showImages, setShowImages] = useState(true);
+//     const [isFloorHovered, setIsFloorHovered] = useState(false);
+//     const [isImagesHovered, setIsImagesHovered] = useState(false);
+//     const [showPinSelectionModal, setShowPinSelectionModal] = useState(false);
+//     const [selectedPinForMove, setSelectedPinForMove] = useState(null);
+//     const [isDragging, setIsDragging] = useState(false);
+//     const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
+//     const [showIconSelectionModal, setShowIconSelectionModal] = useState(false);
+//     const [selectedArea, setSelectedArea] = useState(null);
+//     const [icons, setIcons] = useState([]);
+
+//     const navigate = useNavigate();
+
+
+//     const toggleFloor = () => {
+//         setLoadingAction(true);
+//         setTimeout(() => {
+//             setCurrentFloor((prev) => (prev === 1 ? 2 : 1));
+//             setLoadingAction(false);
+//         }, 500);
+//     };
+
+//     const toggleImages = () => {
+//         setLoadingAction(true);
+//         setTimeout(() => {
+//             setShowImages((prev) => !prev);
+//             setLoadingAction(false);
+//         }, 500);
+//     };
+
+//     const handleAreaClick = (area) => {
+//         setSelectedArea(area);
+//         setShowIconSelectionModal(true);
+//     };
+
+//     const handleSidebarClose = () => {
+//         setIsSidebarOpen(false);
+//         setClickedArea(null);
+//     };
+
+//     const handlePinClick = (pin) => {
+//         setSelectedPin(pin);
+//         setOpenModal(true);
+//     };
+
+//     const handleCloseModal = () => {
+//         setOpenModal(false);
+//         setSelectedPin(null);
+//     };
+
+//     const handlePinMove = useCallback(
+//         (e) => {
+//             if (!isDragging || !selectedPinForMove) return;
+
+//             const svg = e.currentTarget;
+//             const rect = svg.getBoundingClientRect();
+//             const viewBox = svg.viewBox.baseVal;
+
+//             const x = (e.clientX - rect.left) * (viewBox.width / rect.width);
+//             const y = (e.clientY - rect.top) * (viewBox.height / rect.height);
+
+//             setPins((prevPins) =>
+//                 prevPins.map((pin) =>
+//                     pin.id === selectedPinForMove
+//                         ? { ...pin, coordinates: { x, y } }
+//                         : pin
+//                 )
+//             );
+//         },
+//         [isDragging, selectedPinForMove]
+//     );
+
+//     const savePinPosition = async (pinId) => {
+//         const pinToUpdate = pins.find((p) => p.id === pinId);
+//         if (!pinToUpdate) return;
+
+//         try {
+//             await supabase
+//                 .from("pins")
+//                 .update({ coordinates: JSON.stringify(pinToUpdate.coordinates) })
+//                 .eq("id", pinId);
+//         } catch (err) {
+//             console.error("Error updating pin:", err);
+//         }
+//     };
+
+//     const handleIconSelection = (iconSrc) => {
+//         if (!selectedArea) return;
+
+//         const newIcon = {
+//             src: iconSrc,
+//             x: selectedArea.x + selectedArea.width / 2 - 25, // Center the icon
+//             y: selectedArea.y + selectedArea.height / 2 - 25,
+//             width: 50,
+//             height: 50,
+//         };
+
+//         setIcons((prevIcons) => [...prevIcons, newIcon]);
+//         setShowIconSelectionModal(false);
+//     };
+
+//     useEffect(() => {
+//         const fetchPins = async () => {
+//             try {
+//                 setIsLoading(true);
+
+//                 const {
+//                     data: { user },
+//                     error: userError,
+//                 } = await supabase.auth.getUser();
+//                 if (userError || !user) throw new Error("Failed to fetch user.");
+
+//                 const { data, error } = await supabase
+//                     .from("pins")
+//                     .select("*")
+//                     .eq("user_uid", user.id);
+//                 if (error) throw error;
+
+//                 const parsedPins = data.map((pin) => {
+//                     let coordinates = { x: 0, y: 0 };
+//                     if (pin.coordinates) {
+//                         try {
+//                             const parsedCoordinates = JSON.parse(pin.coordinates);
+//                             coordinates = {
+//                                 x: parseInt(parsedCoordinates.left.replace("px", ""), 10) || 0,
+//                                 y: parseInt(parsedCoordinates.top.replace("px", ""), 10) || 0,
+//                             };
+//                         } catch (err) {
+//                             console.error("Error parsing coordinates JSON:", err);
+//                         }
+//                     }
+//                     return { ...pin, coordinates };
+//                 });
+
+//                 setPins(parsedPins);
+//             } catch (err) {
+//                 console.error("Error fetching pins:", err.message);
+//             } finally {
+//                 setIsLoading(false);
+//             }
+//         };
+
+//         fetchPins();
+//     }, []);
+
+//     const areasToDisplay = currentFloor === 1 ? areas1 : areas2;
+
+//     return (
+//         <div
+//             style={{
+//                 position: "fixed",
+//                 top: 0,
+//                 left: 0,
+//                 width: "100vw",
+//                 height: "100vh",
+//                 display: "flex",
+//                 justifyContent: "center",
+//                 alignItems: "center",
+//                 overflow: "hidden",
+//             }}
+//         >
+//             {(isLoading || loadingAction) ? (
+//                 <div
+//                     style={{
+//                         display: "flex",
+//                         alignItems: "center",
+//                         justifyContent: "center",
+//                         height: "100%",
+//                         fontSize: "20px",
+//                         fontWeight: "bold",
+//                         color: "rgba(0, 0, 0, 0.7)",
+//                     }}
+//                 >
+//                     <CircularProgress size="4rem" style={{ marginRight: "1rem" }} />
+//                     Loading content...
+//                 </div>
+//             ) : (
+//                 <>
+//                     <div
+//                         style={{
+//                             position: "absolute",
+//                             bottom: "5%",
+//                             right: "5%",
+//                             display: "flex",
+//                             flexDirection: "column",
+//                             gap: "10px",
+//                             zIndex: 10,
+//                         }}
+//                     >
+//                         <button
+//                             style={{
+//                                 padding: "10px 20px",
+//                                 fontSize: "clamp(14px, 2vw, 18px)",
+//                                 backgroundColor: isFloorHovered ? "#1D3557" : "#457B9D",
+//                                 color: "#fae6cfff",
+//                                 border: "none",
+//                                 borderRadius: "8px",
+//                                 cursor: "pointer",
+//                                 width: "clamp(120px, 20vw, 200px)",
+//                                 display: "flex",
+//                                 alignItems: "center",
+//                                 justifyContent: "center",
+//                                 gap: "10px",
+//                                 transition: "background-color 0.3s ease",
+//                             }}
+//                             onMouseEnter={() => setIsFloorHovered(true)}
+//                             onMouseLeave={() => setIsFloorHovered(false)}
+//                             onClick={toggleFloor}
+//                         >
+//                             <MapIcon style={{ fontSize: "clamp(16px, 2vw, 24px)" }} />
+//                             Change to Floor {currentFloor === 1 ? 2 : 1}
+//                         </button>
+
+//                         <button
+//                             style={{
+//                                 padding: "10px 20px",
+//                                 fontSize: "clamp(14px, 2vw, 18px)",
+//                                 backgroundColor: isImagesHovered ? "#1D3557" : "#457B9D",
+//                                 color: "#fae6cfff",
+//                                 border: "none",
+//                                 borderRadius: "8px",
+//                                 cursor: "pointer",
+//                                 width: "clamp(120px, 20vw, 200px)",
+//                                 display: "flex",
+//                                 alignItems: "center",
+//                                 justifyContent: "center",
+//                                 gap: "10px",
+//                                 transition: "background-color 0.3s ease",
+//                             }}
+//                             onMouseEnter={() => setIsImagesHovered(true)}
+//                             onMouseLeave={() => setIsImagesHovered(false)}
+//                             onClick={toggleImages}
+//                         >
+//                             <ChangeCircleIcon style={{ fontSize: "clamp(16px, 2vw, 24px)" }} />
+//                             {showImages ? "Switch Style" : "Switch Style"}
+//                         </button>
+
+//                         <button
+//                             style={{
+//                                 padding: "10px 20px",
+//                                 fontSize: "clamp(14px, 2vw, 18px)",
+//                                 backgroundColor: "#457B9D",
+//                                 color: "#fae6cfff",
+//                                 border: "none",
+//                                 borderRadius: "8px",
+//                                 cursor: "pointer",
+//                                 width: "clamp(120px, 20vw, 200px)",
+//                                 display: "flex",
+//                                 alignItems: "center",
+//                                 justifyContent: "center",
+//                                 gap: "10px",
+//                                 transition: "background-color 0.3s ease",
+//                             }}
+//                             onClick={() => setShowPinSelectionModal(true)}
+//                         >
+//                             Move Pins
+//                         </button>
+//                     </div>
+
+//                     <div
+//                         style={{
+//                             width: "100vw",
+//                             height: "100vh",
+//                             display: "flex",
+//                             justifyContent: "center",
+//                             alignItems: "center",
+//                         }}
+//                     >
+//                         <FloorContent
+//                             areas={areasToDisplay}
+//                             showImages={showImages}
+//                             pins={pins}
+//                             onAreaClick={handleAreaClick}
+//                             onPinClick={handlePinClick}
+//                             selectedPinForMove={selectedPinForMove}
+//                             onPinMouseDown={(pinId, e) => {
+//                                 if (selectedPinForMove === pinId) {
+//                                     setIsDragging(true);
+//                                     setDragStartPos({
+//                                         x: e.clientX,
+//                                         y: e.clientY,
+//                                     });
+//                                 }
+//                             }}
+//                             onMouseMove={handlePinMove}
+//                             onMouseUp={() => {
+//                                 if (isDragging) {
+//                                     setIsDragging(false);
+//                                     savePinPosition(selectedPinForMove);
+//                                 }
+//                             }}
+//                             onMouseLeave={() => setIsDragging(false)}
+//                             icons={icons}
+//                         />
+//                     </div>
+
+//                     {/* Icon Selection Modal */}
+//                     <Modal
+//                         open={showIconSelectionModal}
+//                         onClose={() => setShowIconSelectionModal(false)}
+//                     >
+//                         <div
+//                             style={{
+//                                 position: "absolute",
+//                                 top: "50%",
+//                                 left: "50%",
+//                                 transform: "translate(-50%, -50%)",
+//                                 backgroundColor: "#A8DADC",
+//                                 padding: "20px",
+//                                 borderRadius: "8px",
+//                                 width: "400px",
+//                                 textAlign: "center",
+//                             }}
+//                         >
+//                             <h2>Select a Pin</h2>
+//                             <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", justifyContent: "center" }}>
+//                                 {[
+//                                     { src: CautionHoverIcon, label: "Caution" },
+//                                     { src: CleaningIcon, label: "Cleaning" },
+//                                     { src: ElectricalIcon, label: "Electrical" },
+//                                     { src: ITIcon, label: "IT Maintenance" },
+//                                     { src: RepairIcon, label: "Repair" },
+//                                     { src: RequestIcon, label: "Request" },
+//                                 ].map((icon, index) => (
+//                                     <div
+//                                         key={index}
+//                                         style={{ cursor: "pointer", textAlign: "center" }}
+//                                         onClick={() => handleIconSelection(icon.src)}
+//                                     >
+//                                         <img
+//                                             src={icon.src}
+//                                             alt={icon.label}
+//                                             style={{ width: "60px", height: "60px" }}
+//                                         />
+//                                         <p>{icon.label}</p>
+//                                     </div>
+//                                 ))}
+//                             </div>
+//                         </div>
+//                     </Modal>
+
+//                     {clickedArea && (
+//                         <div
+//                             style={{
+//                                 position: "absolute",
+//                                 bottom: "20px",
+//                                 backgroundColor: "rgba(0, 0, 0, 0.8)",
+//                                 color: "#fff",
+//                                 padding: "10px 20px",
+//                                 borderRadius: "5px",
+//                                 fontSize: "16px",
+//                             }}
+//                         >
+//                             {`You clicked on: ${clickedArea}`}
+//                         </div>
+//                     )}
+
+//                     <PinSidebar isOpen={isSidebarOpen} setIsOpen={handleSidebarClose} />
+//                 </>
+//             )}
+//         </div>
+//     );
+// };
+
+// export default FloorMap;
+
+// import React, { useState, useEffect } from "react";
+// import { areas1, areas2 } from "../helper/areas";
+// import supabase from "../helper/supabaseClient";
+// import CircularProgress from "@mui/material/CircularProgress";
+// import Modal from "@mui/material/Modal";
+// import Button from "@mui/material/Button";
+// import { useNavigate } from "react-router-dom";
+// import MapIcon from '@mui/icons-material/Map';
+// import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
+
+// // Reusable ToggleButton Component
+// const ToggleButton = ({ label, onClick, isActive }) => (
+//     <button
+//         style={{
+//             padding: "10px 20px",
+//             margin: "5px",
+//             backgroundColor: isActive ? "#4CAF50" : "#333",
+//             color: "#fff",
+//             border: "none",
+//             borderRadius: "5px",
+//             cursor: "pointer",
+//             fontWeight: isActive ? "bold" : "normal",
+//         }}
+//         onClick={onClick}
+//     >
+//         {label}
+//     </button>
+// );
+
+// // FloorContent Component to Encapsulate SVG Logic
+// const FloorContent = ({ areas, showImages, pins, onAreaClick, onPinClick }) => (
+//     <svg
+//         width="100%"
+//         height="100%"
+//         viewBox="0 0 1080 1080"
+//         preserveAspectRatio="xMidYMid meet"
+//         xmlns="http://www.w3.org/2000/svg"
+//     >
+//         {areas.map((area) => (
+//             <g
+//                 key={area.id}
+//                 onClick={(e) => {
+//                     e.stopPropagation();
+//                     onAreaClick(area.label);
+//                 }}
+//                 style={{ cursor: "pointer" }}
+//             >
+//                 <rect
+//                     x={area.x}
+//                     y={area.y}
+//                     width={area.width}
+//                     height={area.height}
+//                     fill={area.color}
+//                     stroke="black"
+//                 />
+//                 {showImages && area.image && (
+//                     <image
+//                         x={area.x}
+//                         y={area.y}
+//                         width={area.width}
+//                         height={area.height}
+//                         href={area.image}
+//                     />
+//                 )}
+//                 {!showImages && (
+//                     <text
+//                         x={area.x + area.width / 2}
+//                         y={area.y + area.height / 2}
+//                         textAnchor="middle"
+//                         dominantBaseline="middle"
+//                         fontSize="16"
+//                         fontWeight="bold"
+//                         fill="black"
+//                     >
+
+//                     </text>
+//                 )}
+//                 <text
+//                     x={area.x + area.width / 2}
+//                     y={area.y + area.height / 2}
+//                     textAnchor="middle"
+//                     dominantBaseline="middle"
+//                     fontSize="18"
+//                     fontFamily="Poppins"
+//                     fill="black"
+//                     fontWeight="bold" // Makes the black text thicker/bold
+//                     stroke="#D3D3D3"
+//                     strokeWidth="5"
+//                     paintOrder="stroke fill"
+//                 >
+//                     {area.label}
+//                 </text>
+//             </g>
+//         ))}
+//         {pins.map((pin) =>
+//             pin.coordinates && pin.coordinates.x && pin.coordinates.y ? (
+//                 <circle
+//                     key={pin.id}
+//                     cx={pin.coordinates.x}
+//                     cy={pin.coordinates.y}
+//                     r={30}
+//                     fill="red"
+//                     stroke="black"
+//                     onClick={() => onPinClick(pin)}
+//                 />
+//             ) : null
+//         )}
+//     </svg>
+// );
+
+// // Main Component
+// const FloorMap = () => {
+//     const [pins, setPins] = useState([]);
+//     const [clickedArea, setClickedArea] = useState(null);
+//     const [isLoading, setIsLoading] = useState(true);
+//     const [loadingAction, setLoadingAction] = useState(false);
+//     const [selectedPin, setSelectedPin] = useState(null);
+//     const [openModal, setOpenModal] = useState(false);
+//     const [currentFloor, setCurrentFloor] = useState(1);
+//     const [showImages, setShowImages] = useState(true);
+//     const [isFloorHovered, setIsFloorHovered] = useState(false); // Hover state for the floor button
+//     const [isImagesHovered, setIsImagesHovered] = useState(false)
+
+//     const navigate = useNavigate();
+
+//     const toggleFloor = () => {
+//         setLoadingAction(true);
+//         setTimeout(() => {
+//             setCurrentFloor((prev) => (prev === 1 ? 2 : 1));
+//             setLoadingAction(false);
+//         }, 500); // Simulate loading for 500ms
+//     };
+
+//     const toggleImages = () => {
+//         setLoadingAction(true);
+//         setTimeout(() => {
+//             setShowImages((prev) => !prev);
+//             setLoadingAction(false);
+//         }, 500); // Simulate loading for 500ms
+//     };
+
+//     const handleAreaClick = (areaLabel) => {
+//         setClickedArea(areaLabel);
+//     };
+
+//     const handlePinClick = (pin) => {
+//         setSelectedPin(pin);
+//         setOpenModal(true);
+//     };
+
+//     const handleCloseModal = () => {
+//         setOpenModal(false);
+//         setSelectedPin(null);
+//     };
+
+//     useEffect(() => {
+//         const fetchPins = async () => {
+//             try {
+//                 setIsLoading(true);
+
+//                 const {
+//                     data: { user },
+//                     error: userError,
+//                 } = await supabase.auth.getUser();
+//                 if (userError || !user) throw new Error("Failed to fetch user.");
+
+//                 const { data, error } = await supabase
+//                     .from("pins")
+//                     .select("*")
+//                     .eq("user_uid", user.id);
+//                 if (error) throw error;
+
+//                 const parsedPins = data.map((pin) => {
+//                     let coordinates = { x: 0, y: 0 };
+//                     if (pin.coordinates) {
+//                         try {
+//                             const parsedCoordinates = JSON.parse(pin.coordinates);
+//                             coordinates = {
+//                                 x: parseInt(parsedCoordinates.left.replace("px", ""), 10) || 0,
+//                                 y: parseInt(parsedCoordinates.top.replace("px", ""), 10) || 0,
+//                             };
+//                         } catch (err) {
+//                             console.error("Error parsing coordinates JSON:", err);
+//                         }
+//                     }
+//                     return { ...pin, coordinates };
+//                 });
+
+//                 setPins(parsedPins);
+//             } catch (err) {
+//                 console.error("Error fetching pins:", err.message);
+//             } finally {
+//                 setIsLoading(false);
+//             }
+//         };
+
+//         fetchPins();
+//     }, []);
+
+//     const areasToDisplay = currentFloor === 1 ? areas1 : areas2;
+
+//     return (
+//         <div
+//             style={{
+//                 position: "fixed",
+//                 top: 0,
+//                 left: 0,
+//                 width: "100vw",
+//                 height: "100vh",
+//                 display: "flex",
+//                 justifyContent: "center",
+//                 alignItems: "center",
+//                 overflow: "hidden",
+//             }}
+//         >
+//             {(isLoading || loadingAction) ? (
+//                 <div
+//                     style={{
+//                         display: "flex",
+//                         alignItems: "center",
+//                         justifyContent: "center",
+//                         height: "100%",
+//                         fontSize: "20px",
+//                         fontWeight: "bold",
+//                         color: "rgba(0, 0, 0, 0.7)",
+//                     }}
+//                 >
+//                     <CircularProgress size="4rem" style={{ marginRight: "1rem" }} />
+//                     Loading content...
+//                 </div>
+//             ) : (
+//                 <>
+//                     <div
+//                         style={{
+//                             position: "absolute",
+//                             bottom: "5%", // Positioned relative to the viewport height
+//                             right: "5%", // Positioned relative to the viewport width
+//                             display: "flex",
+//                             flexDirection: "column", // Stack buttons vertically
+//                             gap: "10px", // Space between buttons
+//                             zIndex: 10,
+//                         }}
+//                     >
+//                         <button
+//                             style={{
+//                                 padding: "10px 20px", // Responsive padding
+//                                 fontSize: "clamp(14px, 2vw, 18px)", // Responsive font size
+//                                 backgroundColor: isFloorHovered ? "#1D3557" : "#457B9D", // Change color on hover
+//                                 color: "#fae6cfff",
+//                                 border: "none",
+//                                 borderRadius: "8px", // Rounded corners
+//                                 cursor: "pointer",
+//                                 width: "clamp(120px, 20vw, 200px)", // Responsive width
+//                                 display: "flex", // Use flexbox
+//                                 alignItems: "center", // Align items vertically
+//                                 justifyContent: "center", // Center content horizontally
+//                                 gap: "10px", // Add space between icon and text
+//                                 transition: "background-color 0.3s ease", // Smooth hover transition
+//                             }}
+//                             onMouseEnter={() => setIsFloorHovered(true)} // Set hover state for floor button
+//                             onMouseLeave={() => setIsFloorHovered(false)} // Reset hover state for floor button
+//                             onClick={toggleFloor}
+//                         >
+//                             <MapIcon style={{ fontSize: "clamp(16px, 2vw, 24px)" }} /> {/* Adjust icon size */}
+//                             Change to Floor {currentFloor === 1 ? 2 : 1}
+//                         </button>
+
+//                         <button
+//                             style={{
+//                                 padding: "10px 20px", // Responsive padding
+//                                 fontSize: "clamp(14px, 2vw, 18px)", // Responsive font size
+//                                 backgroundColor: isImagesHovered ? "#1D3557" : "#457B9D", // Change color on hover
+//                                 color: "#fae6cfff",
+//                                 border: "none",
+//                                 borderRadius: "8px", // Rounded corners
+//                                 cursor: "pointer",
+//                                 width: "clamp(120px, 20vw, 200px)", // Responsive width
+//                                 display: "flex", // Use flexbox
+//                                 alignItems: "center", // Align items vertically
+//                                 justifyContent: "center", // Center content horizontally
+//                                 gap: "10px", // Add space between icon and text
+//                                 transition: "background-color 0.3s ease", // Smooth hover transition
+//                             }}
+//                             onMouseEnter={() => setIsImagesHovered(true)} // Set hover state for images button
+//                             onMouseLeave={() => setIsImagesHovered(false)} // Reset hover state for images button
+//                             onClick={toggleImages}
+//                         >
+//                             <ChangeCircleIcon style={{ fontSize: "clamp(16px, 2vw, 24px)" }} /> {/* Adjust icon size */}
+//                             {showImages ? "Switch Style" : "Switch Style"}
+//                         </button>
+//                     </div>
+//                     <div
+//                         style={{
+//                             width: "100vw",
+//                             height: "100vh",
+//                             display: "flex",
+//                             justifyContent: "center",
+//                             alignItems: "center",
+//                         }}
+//                     >
+//                         <FloorContent
+//                             areas={areasToDisplay}
+//                             showImages={showImages}
+//                             pins={pins}
+//                             onAreaClick={handleAreaClick}
+//                             onPinClick={handlePinClick}
+//                         />
+//                     </div>
+//                     {clickedArea && (
+//                         <div
+//                             style={{
+//                                 position: "absolute",
+//                                 bottom: "20px",
+//                                 backgroundColor: "rgba(0, 0, 0, 0.8)",
+//                                 color: "#fff",
+//                                 padding: "10px 20px",
+//                                 borderRadius: "5px",
+//                                 fontSize: "16px",
+//                             }}
+//                         >
+//                             {`You clicked on: ${clickedArea}`}
+//                         </div>
+//                     )}
+//                 </>
+//             )}
+//             <Modal
+//                 open={openModal}
+//                 onClose={handleCloseModal}
+//                 aria-labelledby="pin-details-modal"
+//                 aria-describedby="pin-status-remove-close"
+//             >
+//                 <div
+//                     style={{
+//                         position: "absolute",
+//                         top: "50%",
+//                         left: "50%",
+//                         transform: "translate(-50%, -50%)",
+//                         backgroundColor: "#A8DADC",
+//                         padding: "20px",
+//                         borderRadius: "8px",
+//                         width: "300px",
+//                         color: "#1D3557",
+//                     }}
+//                 >
+//                     <h2>Pin Details</h2>
+//                     {selectedPin && <p><strong>Pin ID:</strong> {selectedPin.id}</p>}
+//                     <Button variant="outlined" onClick={handleCloseModal}>
+//                         Close
+//                     </Button>
+//                 </div>
+//             </Modal>
+//         </div>
+//     );
+// };
+
+// export default FloorMap;
+
+
+// import React, { useState, useEffect } from "react";
+// import { styled } from "@mui/system";
+// import { Card, CardContent, CardMedia, Typography, Button, Box, Modal, IconButton } from "@mui/material";
+// import { FaMapMarkerAlt } from "react-icons/fa";
+// import CloseIcon from "@mui/icons-material/Close";
+
+// // Main card container style
+// const StyledCard = styled(Card)({
+//     maxWidth: 500, // Maximum width of the card
+//     margin: "10px auto", // Center the card with margin
+//     borderRadius: "10px", // Rounded corners
+//     backgroundColor: "#A8DADC", // Card background color
+//     boxShadow: "0 3px 5px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
+// });
+
+// // Header style for the card
+// const StyledHeader = styled(Box)({
+//     backgroundColor: "#1D3557", // Header background color
+//     padding: "8px 12px", // Padding inside the header
+//     borderRadius: "10px 10px 0 0", // Rounded corners at the top
+//     textAlign: "center", // Center-align text
+//     color: "#fae6cfff", // Font color of the header text
+//     fontFamily: "Poppins", // Font family for consistent design
+//     fontWeight: 600, // Font weight for emphasis
+//     fontSize: "1.4rem", // Font size of the title
+//     position: "relative", // For positioning the close button
+// });
+
+// // Close button style in the header
+// const CloseButton = styled(IconButton)({
+//     position: "absolute", // Position the button at the top-right corner
+//     top: "8px",
+//     right: "8px",
+//     color: "#fae6cfff", // White color for the button
+// });
+
+// // Card content styling
+// const StyledContent = styled(CardContent)({
+//     padding: "10px", // Padding for card content
+//     fontFamily: "Poppins", // Consistent font family
+// });
+
+// // Each detail section inside the card
+// const DetailItem = styled(Box)({
+//     marginBottom: "6px", // Spacing between detail items
+//     textAlign: "center", // Center-align each detail
+// });
+
+// // Label style for detail items
+// const DetailLabel = styled(Typography)({
+//     fontWeight: 600, // Bold font weight for emphasis
+//     fontSize: "1rem", // Font size of the label
+//     color: "#E63946", // Font color of the label
+// });
+
+// // Value style for detail items
+// const DetailValue = styled(Typography)({
+//     fontSize: "1em", // Font size for the value text
+//     color: "#1D3557", // Font color of the value text
+//     marginTop: "4px", // Space between label and value
+// });
+
+// // Button style at the bottom of the card
+// const ActionButton = styled(Button)({
+//     marginTop: "8px", // Space above the button
+//     backgroundColor: "#457B9D", // Background color of the button
+//     color: "#fff", // Font color for button text
+//     padding: "6px 16px", // Padding inside the button
+//     fontSize: "0.9rem", // Font size of the button text
+//     borderRadius: "16px", // Rounded button
+//     "&:hover": {
+//         backgroundColor: "#dc2f3c", // Hover background color
+//     },
+// });
+
+// // Modal container for the image
+// const ModalImage = styled(Box)({
+//     display: "flex", // Center-align the content
+//     alignItems: "center",
+//     justifyContent: "center",
+//     height: "90%", // Modal height
+//     backgroundColor: "rgba(0, 0, 0, 0.8)", // Dark background for the modal
+// });
+
+// const ReportStatus = () => {
+//     const [isCardOpen, setIsCardOpen] = useState(true); // State to control card visibility
+//     const [isImageModalOpen, setIsImageModalOpen] = useState(false); // State to control modal visibility
+
+//     const handleCloseCard = () => setIsCardOpen(false); // Close the card
+//     const handleOpenImageModal = () => setIsImageModalOpen(true); // Open the image modal
+//     const handleCloseImageModal = () => setIsImageModalOpen(false); // Close the image modal
+
+//     // Load custom font (Poppins)
+//     useEffect(() => {
+//         const link = document.createElement("link");
+//         link.href = "https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap";
+//         link.rel = "stylesheet";
+//         document.head.appendChild(link);
+//         return () => document.head.removeChild(link);
+//     }, []);
+
+//     // Example report data
+//     const reportData = {
+//         title: "Electrical Hazard Report",
+//         details: "Spotted illegal dumping of waste materials near the river bank",
+//         type: "Electrical",
+//         status: "Pending",
+//         reporterName: "John Smith",
+//         image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
+//     };
+
+//     return (
+//         <>
+//             {isCardOpen && (
+//                 <StyledCard>
+//                     {/* Header with title and close button */}
+//                     <StyledHeader>
+//                         Report Status
+//                         <CloseButton onClick={handleCloseCard}>
+//                             <CloseIcon />
+//                         </CloseButton>
+//                     </StyledHeader>
+
+//                     {/* Image section */}
+//                     <CardMedia
+//                         component="img"
+//                         height="190" // Image height
+//                         image={reportData.image}
+//                         alt="Report Image"
+//                         sx={{ cursor: "pointer" }}
+//                         onClick={handleOpenImageModal} // Open modal on click
+//                     />
+
+//                     {/* Details section */}
+//                     <StyledContent>
+//                         {["Title", "Details", "Report Type", "Status", "Reporter Name"].map((label, i) => (
+//                             <DetailItem key={i}>
+//                                 <DetailLabel>{label}:</DetailLabel>
+//                                 <DetailValue>{reportData[label.toLowerCase().replace(" ", "")]}</DetailValue>
+//                             </DetailItem>
+//                         ))}
+//                         <Box textAlign="center">
+//                             <ActionButton startIcon={<FaMapMarkerAlt />}>Go to map</ActionButton>
+//                         </Box>
+//                     </StyledContent>
+//                 </StyledCard>
+//             )}
+
+//             {/* Modal for full-size image */}
+//             <Modal open={isImageModalOpen} onClose={handleCloseImageModal}>
+//                 <ModalImage onClick={handleCloseImageModal}>
+//                     <Box
+//                         component="img"
+//                         src={reportData.image}
+//                         alt="Full Size Report Image"
+//                         sx={{ maxWidth: "80%", maxHeight: "60%", borderRadius: "10px" }}
+//                     />
+//                 </ModalImage>
+//             </Modal>
+//         </>
+//     );
+// };
+
+// export default ReportStatus;
+
+
+
+ {/* <Modal open={showPinModal} onClose={() => setShowPinModal(false)}>
+                        <div style={responsiveStyles.pinModal}>
+                            <h2 style={{
+                                color: '#1D3557',
+                                marginBottom: 'clamp(10px, 2vw, 20px)',
+                                fontSize: 'clamp(18px, 3vw, 24px)'
+                            }}>
+                                Select Pin Type
+                            </h2>
+                            <div style={responsiveStyles.pinGrid}>
+                                {pinTypes.map((pin) => (
+                                    <button
+                                        key={pin.id}
+                                        style={{
+                                            background: 'none',
+                                            border: '2px solid #A8DADC',
+                                            borderRadius: '8px',
+                                            padding: 'clamp(0.5rem, 2vw, 1rem)',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
+                                        }}
+                                        onClick={() => handlePinSelect(pin)}
+                                        onMouseOver={(e) => (e.currentTarget.children[0].src = pin.hoverIcon)}
+                                        onMouseOut={(e) => (e.currentTarget.children[0].src = pin.icon)}
+                                    >
+                                        <img
+                                            src={pin.icon}
+                                            alt={pin.label}
+                                            style={responsiveStyles.pinIcon}
+                                        />
+                                        <span style={{
+                                            display: 'block',
+                                            color: '#1D3557',
+                                            fontWeight: '500',
+                                            fontSize: 'clamp(12px, 2vw, 14px)'
+                                        }}>
+                                            {pin.label}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </Modal> */}
+
+
+
+                    
+    //     const handleDeletePin = async () => {
+    //     if (!selectedPin) return;
+      
+    //     try {
+    //       const { error } = await supabase
+    //         .from('pins')
+    //         .delete()
+    //         .eq('pinid', selectedPin.pinid);
+      
+    //       if (error) throw error;
+      
+    //       setPins(prev => prev.filter(pin => pin.pinid !== selectedPin.pinid));
+    //       handleCloseModal();
+    //     } catch (err) {
+    //       console.error('Error deleting pin:', err.message);
+    //       alert('Failed to delete pin. Please try again.');
+    //     }
+    //   };
+
+    // const handleDeletePin = async () => {
+    //     if (!selectedPin) return;
+    
+    //     console.log('Deleting pin:', selectedPin); // Debugging log
+    
+    //     try {
+    //         const { error } = await supabase
+    //             .from('pins')
+    //             .delete()
+    //             .eq('pinid', selectedPin.pinid);
+    
+    //         if (error) {
+    //             console.error('Supabase error:', error);
+    //             throw error;
+    //         }
+    
+    //         // Update state only if deletion was successful
+    //         setPins(prev => prev.filter(pin => pin.pinid !== selectedPin.pinid));
+    
+    //         handleCloseModal();
+    //         alert('Pin deleted successfully');
+    //     } catch (err) {
+    //         console.error('Error deleting pin:', err.message);
+    //         alert('Failed to delete pin. Please try again.');
+    //     }
+    // };
+    
+
+
+    // const handleDeletePin = async (pin) => {
+    //     if (!pin) return; // Ensure a pin is selected
+    
+    //     console.log('Deleting pin:', pin); // Debugging log
+    
+    //     try {
+    //         const { error } = await supabase
+    //             .from('pins')
+    //             .delete()
+    //             .eq('pinid', pin.pinid);
+    
+    //         if (error) {
+    //             console.error('Supabase error:', error);
+    //             throw error;
+    //         }
+    
+    //         // Remove the pin from the map state
+    //         setPins(prev => prev.filter(p => p.pinid !== pin.pinid));
+    
+    //         alert('Pin deleted successfully');
+    //     } catch (err) {
+    //         console.error('Error deleting pin:', err.message);
+    //         alert('Failed to delete pin. Please try again.');
+    //     }
+    // };
+    
+
+    //newest 
+
+    
+    // const handleDeletePin = async () => {
+    //     if (!selectedPin) return;
+    
+    //     console.log('Deleting pin:', selectedPin);
+    
+    //     try {
+    //         // Delete from Supabase only if the pin has a pinid (saved in the database)
+    //         if (selectedPin.pinid) {
+    //             const { error } = await supabase
+    //                 .from('pins')
+    //                 .delete()
+    //                 .eq('pinid', selectedPin.pinid);
+    
+    //             if (error) throw error;
+    //         }
+    
+    //         setPins(prev => prev.filter(pin => pin.pinid !== selectedPin.pinid));
+
+    //         handleCloseModal();
+    //         alert('Pin deleted successfully');
+    //     } catch (err) {
+    //         console.error('Error deleting pin:', err.message);
+    //         alert('Failed to delete pin. Please try again.');
+    //     }
+    // };
+
+
+    {/* <Modal
+    open={showReportModal}
+    onClose={() => {
+        if (selectedPin) handleCancelPin(selectedPin);
+        handleCloseReportModal();
+    }}
+    BackdropProps={{ invisible: true }}
+>
+    <div>
+        <Report
+            pin={selectedPin}
+            onCancel={() => {
+                if (selectedPin) handleCancelPin(selectedPin);
+                handleCloseReportModal();
+            }}
+            onSubmitSuccess={() => {
+                // Optionally trigger a data refresh here if needed
+                handleCloseReportModal();
+            }}
+        />
+    </div>
+</Modal> */}
+
+
+{/* <Modal
+    open={showReportModal}
+    onClose={() => {
+        // Keep the modal open unless cancel is triggered
+        if (selectedPin) handleCancelPin(selectedPin);
+        handleCloseReportModal(); // Close the modal on cancel only
+    }}
+    BackdropProps={{ invisible: true }}
+>
+    <div>
+        <Report
+            pin={selectedPin}
+            onCancel={() => {
+                if (selectedPin) handleCancelPin(selectedPin);
+                handleCloseReportModal(); // Close modal when cancel is clicked
+            }}
+            onSubmitSuccess={() => {
+                // Trigger page refresh on successful submit
+                window.location.reload(); // This will refresh the page
+                handleCloseReportModal(); // Optionally close modal after success
+            }}
+        />
+    </div>
+</Modal>
+
+ */}
+
+
+  // useEffect(() => {
+    //     const fetchUserRole = async () => {
+    //         const { data: { user }, error } = await supabase.auth.getUser();
+    
+    //         if (error) {
+    //             console.error('Error fetching user:', error);
+    //             return;
+    //         }
+    
+    //         if (user) {
+    //             const { data: userDetails, error: userError } = await supabase
+    //                 .from('users') // Replace with your table name
+    //                 .select('role') // Fetch only the role
+    //                 .eq('id', user.id) // Match the user ID from Supabase
+    //                 .single();
+    
+    //             if (userError) {
+    //                 console.error('Error fetching user role:', userError);
+    //             } else {
+    //                 console.log('User Role:', userDetails?.role);
+    //             }
+    //         }
+    //     };
+    //     fetchUserRole();
+    // }, []);
+    
+
+
+
+    // //original working fetch for users only!
+    // useEffect(() => {
+    //     const fetchPins = async () => {
+    //         try {
+    //             setIsLoading(true);
+    //             const { data: { user } } = await supabase.auth.getUser();
+    //             const { data, error } = await supabase
+    //                 .from("pins")
+    //                 .select("*")
+    //                 .eq("user_uid", user.id);
+    
+    //             if (error) throw error;
+                
+    //             const parsedPins = data.map((pin) => ({
+    //                                 ...pin,
+    //                                 coordinates: pin.coordinates ? JSON.parse(pin.coordinates) : { x: 0, y: 0 }
+    //                             }));
+    
+    //             console.log("Fetched Pins:", data); // Debugging
+    //             setPins(parsedPins);
+    //         } catch (err) {
+    //             console.error("Error fetching pins:", err.message);
+    //         } finally {
+    //             setIsLoading(false);
+    //         }
+    //     };
+    //     fetchPins();
+    // }, []);
+
+ // const handleAccept = async () => {
+    //     try {
+    //         const { error } = await supabase
+    //             .from('reports')
+    //             .update({ status: 'In Progress' })
+    //             .eq('pinid', pinId);
+            
+    //         if (error) throw error;
+    //         setReportData(prev => ({ ...prev, status: 'In Progress' }));
+    //         alert('Report Accepted!');
+    //     } catch (err) {
+    //         setError(err.message);
+    //     }
+    // };
+
+    // const handleDeny = async () => {
+    //     try {
+    //         const { error } = await supabase
+    //             .from('reports')
+    //             .update({ status: 'Denied' })
+    //             .eq('pinid', pinId);
+            
+    //         if (error) throw error;
+    //         setReportData(prev => ({ ...prev, status: 'Denied' }));
+    //         alert('Report Denied! Redirecting to map...');
+    //         navigate("/dashboard"); // Redirect to map
+    //     } catch (err) {
+    //         setError(err.message);
+    //     }
+    // };
+    
+    // const handleAccept = async () => {
+    //     try {
+    //         // Update the report status to 'In Progress'
+    //         const { error: reportError } = await supabase
+    //             .from('reports')
+    //             .update({ status: 'In Progress' })
+    //             .eq('pinid', pinId);
+            
+    //         if (reportError) throw reportError;
+    
+    //         // Update the pin status in the pins table
+    //         const { error: pinError } = await supabase
+    //             .from('pins')
+    //             .update({ status: 'In Progress' })
+    //             .eq('pinid', pinId);
+            
+    //         if (pinError) throw pinError;
+    
+    //         setReportData(prev => ({ ...prev, status: 'In Progress' }));
+    //         alert('Report Accepted!');
+    
+    //     } catch (err) {
+    //         setError(err.message);
+    //     }
+    // };
+
+        // const handleDeletePin = async () => {
+    //     if (!selectedPin) return;
+    
+    //     try {
+    //         // Only delete from DB if pin exists in database
+    //         if (selectedPin.pinid) {
+    //             const { error } = await supabase
+    //                 .from('pins')
+    //                 .delete()
+    //                 .eq('pinid', selectedPin.pinid);
+    
+    //             if (error) throw error;
+    //         }
+    
+    //         // Remove from local state
+    //         setPins(prev => prev.filter(pin => pin.pinid !== selectedPin.pinid));
+    //         handleCloseModal();
+    //         alert('Pin deleted successfully');
+    //     } catch (err) {
+    //         console.error('Error deleting pin:', err.message);
+    //         alert('Failed to delete pin. Please try again.');
+    //     }
+    // };
+
+    // Modified useEffect for fetching pins
+// useEffect(() => {
+//     const fetchPins = async () => {
+//         try {
+//             setIsLoading(true);
+//             const { data: { user } } = await supabase.auth.getUser();
+            
+//             // Create base query
+//             let query = supabase
+//                 .from('pins')
+//                 .select('*')
+
+//             // Add filter only for non-admin users
+//             if (userRole !== 'admin') {
+//                 query = query.eq('user_uid', user.id);
+//             }
+
+//             // Execute query
+//             const { data, error } = await query;
+
+//             if (error) throw error;
+            
+//             // Parse coordinates
+//             const parsedPins = data.map((pin) => ({
+//                 ...pin,
+//                 coordinates: pin.coordinates ? JSON.parse(pin.coordinates) : { x: 0, y: 0 }
+//             }));
+
+//             setPins(parsedPins);
+//         } catch (err) {
+//             console.error("Error fetching pins:", err.message);
+//         } finally {
+//             setIsLoading(false);
+//         }
+//     };
+    
+//     fetchPins();
+// }, [userRole]); // Add userRole as dependency
+
+
+    
+    // const handleDeny = async () => {
+    //     try {
+    //         // Update the report status to 'Denied'
+    //         const { error: reportError } = await supabase
+    //             .from('reports')
+    //             .update({ status: 'Denied' })
+    //             .eq('pinid', pinId);
+            
+    //         if (reportError) throw reportError;
+    
+    //         // Delete the pin from the pins table
+    //         const { error: pinError } = await supabase
+    //             .from('pins')
+    //             .delete()
+    //             .eq('pinid', pinId);
+            
+    //         if (pinError) throw pinError;
+    
+    //         setReportData(prev => ({ ...prev, status: 'Denied' }));
+    //         alert('Report Denied!');
+    
+    //         // Navigate back to the map after denying
+    //         navigate("/dashboard");
+    
+    //     } catch (err) {
+    //         setError(err.message);
+    //     }
+    // };
+
+
+    // import React, { useState, useEffect } from "react";
+// import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Snackbar } from "@mui/material";
+// import MuiAlert from "@mui/material/Alert";
+// import { Upload, Visibility, VisibilityOff, Cancel, CheckCircle } from "@mui/icons-material";
+// import FmdBadIcon from "@mui/icons-material/FmdBad";
+// import DeleteIcon from "@mui/icons-material/Delete";
+// import { useNavigate } from "react-router-dom";
+// import PropTypes from "prop-types";
+// import supabase from "../helper/supabaseClient";
+// import { v4 as uuidv4 } from "uuid";  // Add uuid to generate unique file names
+
+
+// const Report = ({ pin, deletePin, setShowReportForm }) => {
+//     const [userData, setUserData] = useState(null);
+//     const [report, setReport] = useState({
+//         title: "",
+//         details: "",
+//         type: pin?.type || "", // Initialize with pin's type
+//         status: "Pending",
+//         name: "",
+//         coordinates: pin?.coordinates,
+//         floor: "",
+//         pinId: pin?.id || "", // Initialize with pin's id
+//         image: null,
+//     });
+
+//     useEffect(() => {
+//         if (pin) {
+//             setReport((prev) => ({
+//                 ...prev,
+//                 pinId: pin.id,
+//                 type: pin.type,
+//             }));
+//         }
+//     }, [pin]);
+
+//     const handleCancel = () => {
+//         // Close the form by updating the state in the parent
+//         setShowReportForm(false); // Hide the report form
+
+//         // Delete the pin
+//         deletePin(pin.id);
+//     };
+
+
+
+//     const [error, setError] = useState(false);
+//     const [open, setOpen] = useState(true);
+//     const [openSnackbar, setOpenSnackbar] = useState(false);
+//     const [showAllFields, setShowAllFields] = useState(false);
+//     const [userId, setUserId] = useState(null); // Store the authenticated user ID
+
+//     const navigate = useNavigate();
+
+//     useEffect(() => {
+//         const fetchUser = async () => {
+//             try {
+//                 // Fetch the current authenticated user
+//                 const { data: { user }, error } = await supabase.auth.getUser();
+//                 if (error) throw error;
+
+//                 if (user) {
+//                     setUserId(user.id); // Set userId from Supabase
+//                     // Fetch additional user data (fname, lname) from your users table
+//                     const { data, error: fetchError } = await supabase
+//                         .from("users")
+//                         .select('fname, lname, id')
+//                         .eq("id", user.id)
+//                         .single();
+
+//                     if (fetchError) throw fetchError;
+
+//                     setUserData({
+//                         fname: data.fname,
+//                         lname: data.lname,
+//                         customUid: data.id, // This is the Supabase `user.id`
+//                     });
+//                 } else {
+//                     console.error("No authenticated user found. Please log in.");
+//                 }
+//             } catch (error) {
+//                 console.error("Error fetching user data:", error.message);
+//             }
+//         };
+//         fetchUser();
+//     }, []);
+
+
+
+
+//     const handleChange = (e) => {
+//         setReport((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+//     };
+
+
+//     const handleFileChange = async (e) => {
+//         const file = e.target.files[0];
+//         if (file) {
+//             try {
+//                 const filePath = `${userId}/${uuidv4()}_${file.name}`; // Generate unique file path
+//                 const { data, error } = await supabase.storage
+//                     .from("uploads") // Replace with your bucket name
+//                     .upload(filePath, file);
+
+//                 if (error) {
+//                     console.error("Upload error:", error);
+//                     return;
+//                 }
+
+//                 // Generate public URL for the uploaded file
+//                 const { data: publicUrlData } = supabase.storage
+//                     .from("uploads")
+//                     .getPublicUrl(filePath);
+
+//                 if (publicUrlData) {
+//                     setReport((prev) => ({ ...prev, image: publicUrlData.publicUrl }));
+//                     console.log("File uploaded successfully:", publicUrlData.publicUrl);
+//                 } else {
+//                     console.error("Failed to generate public URL");
+//                 }
+//             } catch (error) {
+//                 console.error("Unexpected upload error:", error);
+//             }
+//         }
+//     };
+
+//     const handleClick = async (e) => {
+//         e.preventDefault();
+
+//         // Check if required fields are filled
+//         if (!report.title || !report.details || !report.type) {
+//             setError(true);
+//             return;
+//         }
+
+//         try {
+//             // Insert report into Supabase reports table
+//             const { error: insertError } = await supabase.from("reports").insert({
+//                 title: report.title,
+//                 details: report.details,
+//                 type: report.type,
+//                 status: report.status,
+//                 user_uid: userId, // Use the userId from Supabase directly
+//                 name: `${userData?.fname || ""} ${userData?.lname || ""}`, // Ensure name is being passed
+//                 coordinates: report.coordinates,
+//                 floor: report.floor,
+//                 pinid: report.pinId,
+//                 image: report.image, // Save the uploaded image URL in the report
+//             });
+
+//             if (insertError) throw insertError;
+
+//             // Insert data into the pins table
+//             const { error: pinsError } = await supabase.from("pins").upsert({
+//                 pinid: report.pinId, // Pin ID to update or insert
+//                 coordinates: report.coordinates,
+//                 user_uid: userId, // User UID from the current user
+//                 floor: report.floor, // Floor value
+//             });
+
+//             if (pinsError) throw pinsError;
+
+//             setOpen(false);
+//             setOpenSnackbar(true);
+//             setError(false);
+//             resetForm();
+//         } catch (err) {
+//             console.error("Error submitting report:", err.message);
+//             setError(true);
+//         }
+//     };
+
+
+
+//     const resetForm = () => {
+//         setReport({
+//             title: "",
+//             details: "",
+//             type: "",
+//             status: "Pending",
+//             name: `${userData?.fname || ""} ${userData?.lname || ""}`, // Dynamically set the name
+//             coordinates: "",
+//             floor: "",
+//             pinId: "",
+//             image: null,
+//         });
+//     };
+
+
+//     // const handleCancel = () => setOpen(false);
+
+
+//     const handleCloseSnackbar = () => setOpenSnackbar(false);
+
+//     return (
+//         <div>
+//             {/* <Button
+//                 variant="outlined"
+//                 onClick={() => setOpen(true)}
+//                 style={{
+//                     fontFamily: "'Poppins', sans-serif",
+//                     backgroundColor: "#457b9d",
+//                     color: "#f1faee",
+//                     padding: "10px 20px",
+//                     borderRadius: "5px",
+//                 }}
+//             >
+//                 Open Report Form
+//             </Button> */}
+//             <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
+//                 <DialogTitle style={{ fontFamily: "'Poppins', sans-serif", color: "#fae6cfff", backgroundColor: "#1d3557", display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+//                     <div style={{ display: 'flex', alignItems: 'center' }}>
+//                         <FmdBadIcon style={{ marginRight: '10px', color: '#f1faee', fontSize: '35px' }} /> {/* Map pin icon */}
+//                         Submit a New Report
+//                     </div>
+//                     <Button
+//                         onClick={resetForm}
+//                         style={{
+//                             fontFamily: "'Poppins', sans-serif",
+//                             color: "#e63946",
+//                             backgroundColor: "#f1faee",
+//                         }}
+//                     >
+//                         <DeleteIcon />
+//                         Clear
+//                     </Button>
+//                 </DialogTitle>
+
+//                 <DialogContent style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: "#a8dadc", padding: "20px", color: "#1d3557" }}>
+//                     <TextField
+//                         autoFocus
+//                         margin="dense"
+//                         label="Report Title"
+//                         type="text"
+//                         fullWidth
+//                         name="title"
+//                         value={report.title}
+//                         onChange={handleChange}
+//                     />
+//                     <TextField
+//                         margin="dense"
+//                         label="Report Details"
+//                         type="text"
+//                         fullWidth
+//                         multiline
+//                         rows={4}
+//                         name="details"
+//                         value={report.details}
+//                         onChange={handleChange}
+//                     />
+//                     <TextField
+//                         margin="dense"
+//                         label="Report Type"
+//                         type="text"
+//                         fullWidth
+//                         name="type"
+//                         value={report.type}
+//                         // value={"test"}
+//                         onChange={handleChange}
+//                         InputProps={{ readOnly: true }}
+//                     />
+//                     <input
+//                         type="file"
+//                         name="image"
+//                         onChange={handleFileChange}
+//                         id="file-upload"
+//                         style={{ display: "none" }}
+//                     />
+//                     <label htmlFor="file-upload">
+//                         <Button
+//                             variant="contained"
+//                             component="span"
+//                             style={{
+//                                 marginTop: "10px",
+//                                 backgroundColor: "#457b9d",
+//                                 color: "#f1faee",
+//                                 fontFamily: "'Poppins', sans-serif",
+//                                 padding: "8px 20px",
+//                                 borderRadius: "5px",
+//                                 textTransform: "none"
+//                             }}
+//                             startIcon={<Upload />}
+//                         >
+//                             Upload Report Image
+//                         </Button>
+//                     </label>
+//                     {report.image && (
+//                         <p style={{ fontFamily: "'Poppins', sans-serif", color: "#1d3557" }}>
+//                             {report.image}
+//                         </p>
+//                     )}
+//                     {showAllFields && (
+//                         <>
+//                             <TextField
+//                                 margin="dense"
+//                                 label="Floor"
+//                                 type="text"
+//                                 fullWidth
+//                                 name="floor"
+//                                 value={report.floor}
+//                                 // value={"test"}
+//                                 onChange={handleChange}
+//                             />
+//                             <TextField
+//                                 margin="dense"
+//                                 label="Coordinates"
+//                                 type="text"
+//                                 fullWidth
+//                                 name="coordinates"
+//                                 value={report.coordinates}
+//                                 // value={"test"}
+//                                 onChange={handleChange}
+//                             // InputProps={{ readOnly: true }}
+//                             />
+//                             <TextField
+//                                 margin="dense"
+//                                 label="Pin ID"
+//                                 type="text"
+//                                 fullWidth
+//                                 name="pinId"
+//                                 value={report.pinId}
+//                                 // value={"test"}
+//                                 onChange={handleChange}
+//                                 InputProps={{ readOnly: true }}
+//                             />
+//                             <TextField
+//                                 margin="dense"
+//                                 label="User UID"
+//                                 type="text"
+//                                 fullWidth
+//                                 value={userData?.customUid || ""}
+//                                 InputProps={{ readOnly: true }}
+//                             />
+//                             <TextField
+//                                 margin="dense"
+//                                 label="Name"
+//                                 type="text"
+//                                 fullWidth
+//                                 value={`${userData?.fname || ""} ${userData?.lname || ""}`}
+//                                 InputProps={{ readOnly: true }}
+//                             />
+//                             {/* <TextField
+//                                 margin="dense"
+//                                 label="Name"
+//                                 type="text"
+//                                 fullWidth
+//                                 value={report.name} // Use the report state for value
+//                                 InputProps={{ readOnly: true }} // Keep it read-only if you don’t want editing
+//                             /> */}
+
+//                             <TextField
+//                                 margin="dense"
+//                                 label="Status"
+//                                 type="text"
+//                                 fullWidth
+//                                 value={report.status}
+//                                 InputProps={{ readOnly: true }}
+//                             />
+//                         </>
+//                     )}
+//                     {error && (
+//                         <p style={{ color: "red", marginTop: "10px" }}>
+//                             All fields must be filled out.
+//                         </p>
+//                     )}
+//                 </DialogContent>
+
+//                 <DialogActions style={{ backgroundColor: "#1d3557", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+//                     <Button
+//                         onClick={() => setShowAllFields(!showAllFields)}
+//                         style={{
+//                             fontFamily: "'Poppins', sans-serif",
+//                             backgroundColor: "#457b9d",
+//                             color: "#f1faee",
+//                             alignSelf: "flex-start",
+//                         }}
+//                         startIcon={showAllFields ? <VisibilityOff /> : <Visibility />}
+//                     >
+//                         {showAllFields ? "Hide All Fields" : "Show All Fields"}
+//                     </Button>
+//                     <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+//                         <Button
+//                             onClick={handleCancel}
+//                             style={{
+//                                 fontFamily: "'Poppins', sans-serif",
+//                                 color: "#e63946",
+//                                 backgroundColor: "#f1faee",
+//                             }}
+//                             startIcon={<Cancel />}
+//                         >
+//                             Cancel
+//                         </Button>
+//                         <Button
+//                             onClick={handleClick}
+//                             style={{
+//                                 fontFamily: "'Poppins', sans-serif",
+//                                 color: "#f1faee",
+//                                 backgroundColor: "#457b9d",
+//                             }}
+//                             startIcon={<CheckCircle />}
+//                         >
+//                             Submit Report
+//                         </Button>
+//                     </div>
+//                 </DialogActions>
+//             </Dialog>
+
+//             <Snackbar
+//                 open={openSnackbar}
+//                 autoHideDuration={6000}
+//                 onClose={handleCloseSnackbar}
+//                 anchorOrigin={{ vertical: "top", horizontal: "center" }}
+//             >
+//                 <MuiAlert onClose={handleCloseSnackbar} severity="success">
+//                     Report submitted successfully!
+//                 </MuiAlert>
+//             </Snackbar>
+//         </div>
+//     );
+// };
+
+// Report.propTypes = {
+//     pin: PropTypes.string,
+// };
+
+// export default Report;
+
+
+// import React, { useState, useEffect } from "react";
+// import {
+//     Box,
+//     Typography,
+//     Card,
+//     CardContent,
+//     CardMedia,
+//     Button,
+//     Grid,
+//     Container,
+//     Chip,
+// } from "@mui/material";
+// import { styled } from "@mui/system";
+// import { FaTrash } from "react-icons/fa";
+// import { useTheme } from '@mui/material/styles';
+// import Navbar from '../components/Navbar';
+// import supabase from "../helper/supabaseClient";
+
+// const StyledCard = styled(Card)(({ theme }) => ({
+//     marginBottom: "1rem",
+//     transition: "transform 0.2s",
+//     "&:hover": {
+//         transform: "translateY(-4px)",
+//         boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+//     },
+// }));
+
+// const History = () => {
+//     const [formData, setFormData] = useState({
+//         name: "",
+//         lastName: "",
+//         email: "",
+//         role: "",
+//         customUid: "",
+//     });
+
+//     const [reports, setReports] = useState([]); // Initialize as an empty array
+//     const [media, setMedia] = useState([]); // Media files
+//     const theme = useTheme();
+
+//     // Fetch user details from Supabase
+//     useEffect(() => {
+//         const fetchUserInfo = async () => {
+//             const { data: { user }, error } = await supabase.auth.getUser();
+
+//             if (error) {
+//                 console.error('Error fetching user:', error);
+//                 return;
+//             }
+
+//             if (user) {
+//                 const { data: userDetails, error: userError } = await supabase
+//                     .from('users')
+//                     .select('fname, lname, role, id')
+//                     .eq('id', user.id)
+//                     .single();
+
+//                 if (userError) {
+//                     console.error('Error fetching user details:', userError);
+//                 } else {
+//                     setFormData({
+//                         name: `${userDetails.fname} ${userDetails.lname}`,
+//                         lastName: userDetails.lname,
+//                         email: user.email,
+//                         role: userDetails.role,
+//                         customUid: userDetails.id,
+//                     });
+//                 }
+//             }
+//         };
+//         fetchUserInfo();
+//     }, []);
+
+//     // Fetch reports from Supabase when customUid is set
+//     useEffect(() => {
+//         if (formData.customUid) {
+//             fetchReports();
+//         }
+//     }, [formData.customUid]);
+
+//     // const fetchReports = async () => {
+//     //     try {
+//     //         const { data, error } = await supabase
+//     //             .from('reports')
+//     //             .select('id, title, details, status, type, image, created_at')
+//     //             .eq('user_uid', formData.customUid); // Using the customUid from the formData state
+
+//     //         if (error) throw error;
+
+//     //         console.log("Fetched Reports:", data);
+//     //         setReports(data);
+//     //     } catch (error) {
+//     //         console.error("Error fetching reports:", error);
+//     //     }
+//     // };
+
+//     // const fetchReports = async () => {
+//     //     try {
+//     //         // Fetch reports
+//     //         const { data: reportsData, error: reportsError } = await supabase
+//     //             .from('reports')
+//     //             .select('id, title, details, status, type, image, created_at')
+//     //             .eq('user_uid', formData.customUid);
+
+//     //         if (reportsError) throw reportsError;
+
+//     //         // Fetch images from storage
+//     //         const { data: mediaData, error: mediaError } = await supabase.storage
+//     //             .from('uploads')
+//     //             .list(`${formData.customUid}/`, {
+//     //                 limit: 50, // Adjust limit as needed
+//     //                 sortBy: { column: 'name', order: 'asc' },
+//     //             });
+
+//     //         if (mediaError) throw mediaError;
+
+//     //         // Map images to their full URLs
+//     //         const imageUrls = mediaData.reduce((acc, file) => {
+//     //             acc[file.name] = `https://xgznhhqrqmdmakhadoyc.supabase.co/storage/v1/object/public/uploads/${formData.customUid}/${file.name}`;
+//     //             return acc;
+//     //         }, {});
+
+//     //         // Attach image URLs to reports
+//     //         const enrichedReports = reportsData.map((report) => ({
+//     //             ...report,
+//     //             image: imageUrls[report.image] || null, // Use full URL or null if not found
+//     //         }));
+
+//     //         setReports(enrichedReports);
+//     //     } catch (error) {
+//     //         console.error("Error fetching reports or images:", error);
+//     //     }
+//     // };
+
+//     // const fetchReports = async () => {
+//     //     try {
+//     //         // Fetch reports
+//     //         const { data: reportsData, error: reportsError } = await supabase
+//     //             .from('reports')
+//     //             .select('id, title, details, status, type, image, created_at')
+//     //             .eq('user_uid', formData.customUid);
+
+//     //         if (reportsError) throw reportsError;
+
+//     //         // Fetch images from storage
+//     //         const { data: mediaData, error: mediaError } = await supabase.storage
+//     //             .from('uploads')
+//     //             .list(`${formData.customUid}/`, {
+//     //                 limit: 50,
+//     //                 sortBy: { column: 'name', order: 'asc' },
+//     //             });
+
+//     //         if (mediaError) throw mediaError;
+
+//     //         // Map media files to URLs
+//     //         const imageUrls = (mediaData || []).reduce((acc, file) => {
+//     //             acc[file.name] = `https://xgznhhqrqmdmakhadoyc.supabase.co/storage/v1/object/public/uploads/${formData.customUid}/${file.name}`;
+
+//     //             return acc;
+//     //         }, {});
+
+//     //         // Attach image URLs to reports
+//     //         const enrichedReports = reportsData.map((report) => ({
+//     //             ...report,
+//     //             image: imageUrls[report.image] || null,
+//     //         }));
+
+//     //         setReports(enrichedReports);
+//     //     } catch (error) {
+//     //         console.error("Error fetching reports or media:", error);
+//     //     }
+//     // };
+
+//     // const fetchReports = async () => {
+//     //     try {
+//     //         // Fetch reports
+//     //         const { data: reportsData, error: reportsError } = await supabase
+//     //             .from('reports')
+//     //             .select('id, title, details, status, type, image, created_at')
+//     //             .eq('user_uid', formData.customUid);
+
+//     //         if (reportsError) {
+//     //             console.error("Error fetching reports:", reportsError);
+//     //             return;
+//     //         }
+
+//     //         console.log("Fetched Reports:", reportsData);  // Log the reports to check if they're fetched correctly
+
+//     //         // Fetch images from storage
+//     //         const { data: mediaData, error: mediaError } = await supabase.storage
+//     //             .from('uploads')
+//     //             .list(`${formData.customUid}/`, {
+//     //                 limit: 50,
+//     //                 sortBy: { column: 'name', order: 'asc' },
+//     //             });
+
+//     //         if (mediaError) {
+//     //             console.error("Error fetching media:", mediaError);
+//     //             return;
+//     //         }
+
+//     //         console.log("Fetched Media:", mediaData);  // Log the media data to check image files
+
+//     //         // Map media files to URLs
+//     //         const imageUrls = (mediaData || []).reduce((acc, file) => {
+//     //             const url = `https://xgznhhqrqmdmakhadoyc.supabase.co/storage/v1/object/public/uploads/${formData.customUid}/${file.name}`;
+//     //             acc[file.name] = url;
+//     //             return acc;
+//     //         }, {});
+
+//     //         console.log("Image URLs:", imageUrls);  // Log the image URLs to verify
+
+//     //         // Attach image URLs to reports
+//     //         const enrichedReports = reportsData.map((report) => ({
+//     //             ...report,
+//     //             image: imageUrls[report.image] || '/path/to/placeholder-image.jpg', // Use placeholder if image is missing
+//     //         }));
+
+//     //         console.log("Enriched Reports:", enrichedReports);  // Log enriched reports with images
+
+//     //         setReports(enrichedReports);  // Set the enriched reports to state
+
+//     //     } catch (error) {
+//     //         console.error("Error fetching reports or media:", error);
+//     //     }
+//     // };
+
+//     const fetchReports = async () => {
+//         try {
+//             // Fetch reports
+//             const { data: reportsData, error: reportsError } = await supabase
+//                 .from('reports')
+//                 .select('id, title, details, status, type, image, created_at')
+//                 .eq('user_uid', formData.customUid);
+
+//             if (reportsError) {
+//                 console.error("Error fetching reports:", reportsError);
+//                 return;
+//             }
+
+//             console.log("Fetched Reports:", reportsData);  // Log the reports to check if they're fetched correctly
+
+//             // Fetch images from storage
+//             const { data: mediaData, error: mediaError } = await supabase.storage
+//                 .from('uploads')
+//                 .list(`${formData.customUid}/`, {
+//                     limit: 50,
+//                     sortBy: { column: 'name', order: 'asc' },
+//                 });
+
+//             if (mediaError) {
+//                 console.error("Error fetching media:", mediaError);
+//                 return;
+//             }
+
+//             console.log("Fetched Media:", mediaData);  // Log the media data to check image files
+
+//             // Map media files to URLs
+//             const imageUrls = (mediaData || []).reduce((acc, file) => {
+//                 const url = `https://xgznhhqrqmdmakhadoyc.supabase.co/storage/v1/object/public/uploads/${formData.customUid}/${file.name}`;
+//                 acc[file.name] = url;
+//                 return acc;
+//             }, {});
+
+//             console.log("Image URLs:", imageUrls);  // Log the image URLs to verify
+
+//             // Attach image URLs to reports
+//             const enrichedReports = reportsData.map((report) => {
+//                 console.log("Report Image:", report.image);  // Log the image property of each report
+//                 return {
+//                     ...report,
+//                     image: imageUrls[report.image] || '/path/to/placeholder-image.jpg', // Use placeholder if image is missing
+//                 };
+//             });
+
+//             console.log("Enriched Reports:", enrichedReports);  // Log enriched reports with images
+
+//             setReports(enrichedReports);  // Set the enriched reports to state
+
+//         } catch (error) {
+//             console.error("Error fetching reports or media:", error);
+//         }
+//     };
+
+
+
+
+//     const handleDeleteReport = async (id) => {
+//         try {
+//             const { error } = await supabase
+//                 .from('reports')
+//                 .delete()
+//                 .eq('id', id);
+
+//             if (error) throw error;
+
+//             setReports((prevReports) => prevReports.filter(report => report.id !== id));
+//         } catch (error) {
+//             console.error("Error deleting report:", error);
+//         }
+//     };
+
+//     const getStatusColor = (status) => {
+//         switch (status.toLowerCase()) {
+//             case "resolved": return "success";
+//             case "pending": return "warning";
+//             case "in progress": return "info";
+//             default: return "default";
+//         }
+//     };
+
+//     return (
+//         <Container maxWidth="lg" sx={{ py: 4 }}>
+//             <Navbar userDetails={formData} />
+//             <Box sx={theme.components.MuiBox?.styleOverrides?.root || {}}>
+//                 <Typography variant="h4" component="h1" gutterBottom>
+//                     Report History
+//                 </Typography>
+//                 <Typography variant="subtitle1">
+//                     User: {formData.name} | UID: {formData.customUid}
+//                 </Typography>
+//             </Box>
+
+//             {reports.length === 0 ? (
+//                 <Typography variant="body1" color="textSecondary" sx={{ mt: 4 }}>
+//                     No reports available.
+//                 </Typography>
+//             ) : (
+//                 <Grid container spacing={3}>
+//                     {Array.isArray(reports) && reports.map((report) => (
+//                         <Grid item xs={12} key={report.id}>
+//                             <StyledCard>
+//                                 <Grid container>
+//                                     <Grid item xs={12} md={4}>
+//                                         {/* Render image only if available */}
+//                                         {report.image ? (
+//                                             // <CardMedia
+//                                             //     component="img"
+//                                             //     height="200"
+//                                             //     image={`https://xgznhhqrqmdmakhadoyc.supabase.co/storage/v1/object/public/uploads/${report.image}`} // Replace with your correct storage URL
+//                                             //     alt={report.title}
+//                                             //     style={{ cursor: "pointer" }}
+//                                             //     onClick={() => window.open(`https://xgznhhqrqmdmakhadoyc.supabase.co/storage/v1/object/public/uploads/${report.image}`, "_blank")}
+//                                             // />
+//                                             <CardMedia
+//                                                 component="img"
+//                                                 height="200"
+//                                                 // image={report.image} // Use the full URL from enrichedReports
+//                                                 image={`https://xgznhhqrqmdmakhadoyc.supabase.co/storage/v1/object/public/uploads/${userId}/${file.name}`} // Replace with your correct storage URL
+//                                                 alt={report.title}
+//                                                 style={{ cursor: "pointer" }}
+//                                                 onClick={() => window.open(report.image, "_blank")}
+//                                             />
+
+
+
+//                                         ) : (
+//                                             <Box
+//                                                 sx={{
+//                                                     height: 200,
+//                                                     backgroundColor: "#f0f0f0",
+//                                                     display: "flex",
+//                                                     justifyContent: "center",
+//                                                     alignItems: "center",
+//                                                     color: "#888",
+//                                                 }}
+//                                             >
+//                                                 No Image Available
+//                                             </Box>
+//                                         )}
+//                                     </Grid>
+//                                     <Grid item xs={12} md={8}>
+//                                         <CardContent>
+//                                             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2 }}>
+//                                                 <Typography variant="h6" component="h2">
+//                                                     {report.title}
+//                                                 </Typography>
+//                                                 <Button
+//                                                     // variant="outlined"
+//                                                     color="error"
+//                                                     startIcon={<FaTrash />}
+//                                                     onClick={() => handleDeleteReport(report.id)}
+//                                                 // aria-label={`Delete report ${report.title}`}
+//                                                 >
+//                                                     {/* Delete Report */}
+//                                                 </Button>
+//                                             </Box>
+//                                             <Typography variant="body1" paragraph>
+//                                                 {report.details}
+//                                             </Typography>
+//                                             <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+//                                                 <Chip label={`Type: ${report.type}`} variant="outlined" />
+//                                                 <Chip label={`Status: ${report.status}`} color={getStatusColor(report.status)} />
+//                                                 <Chip label={`Created At: ${new Date(report.created_at).toLocaleString()}`} variant="outlined" />
+//                                             </Box>
+//                                         </CardContent>
+//                                     </Grid>
+//                                 </Grid>
+//                             </StyledCard>
+//                         </Grid>
+//                     ))
+//                     }
+//                 </Grid >
+//             )}
+//         </Container >
+//     );
+// };
+
+// export default History;
+
+
+    // const fetchReports = async () => {
+    //     try {
+    //         const { data: reportsData, error: reportsError } = await supabase
+    //             .from('reports')
+    //             .select('id, title, details, status, type, image, created_at')
+    //             .eq('user_uid', formData.customUid)
+    //             .order('created_at', { ascending: false }); // 🔥 This sorts by newest first
+    
+    //         if (reportsError) {
+    //             console.error("Error fetching reports:", reportsError);
+    //             return;
+    //         }
+    
+    //         setReports(reportsData);
+    //     } catch (error) {
+    //         console.error("Error fetching reports:", error);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };

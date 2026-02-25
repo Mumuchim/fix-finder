@@ -1,0 +1,163 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+:root {
+    --accent-color: #A8DADC;
+    --base-color: #1D3557;
+    --font-color: #E63946;
+    --input-color: #fae6cfff;
+    --text-color: #457B9D;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-family: 'Poppins', serif;
+    font-size: 12pt;
+    color: var(--font-color);
+}
+
+.Navbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-wrap: wrap;
+    /* Allows wrapping for small screens */
+    padding: 10px;
+    width: 100%;
+    height: auto;
+    /* Adapts height as content grows */
+    color: var(--base-color);
+    z-index: 10;
+    /* Keeps navbar on top of other content */
+
+    /*
+      The navbar container spans the full width, which can block clicks on the
+      map underneath (especially the upper part). Allow clicks to pass through
+      empty areas while keeping the actual navbar controls clickable.
+    */
+    pointer-events: none;
+}
+
+/* Re-enable pointer events for the interactive navbar controls */
+.Navbar > *,
+.Navbar button,
+.Navbar .MuiIconButton-root,
+.Navbar .MuiButtonBase-root {
+    pointer-events: auto;
+}
+
+.navbar-box {
+    background-color: var(--accent-color);
+    width: 250px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+
+.navbar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* Centered content */
+    padding: 10px 10px;
+
+}
+
+/* welcome text in header */
+.navbar-header .MuiTypography-root {
+    font-size: 18px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    /* Prevents text from wrapping */
+}
+
+.navbar-close-btn {
+    padding: 0;
+    font-size: 18px;
+}
+
+.navbar-close-btn svg {
+    font-size: 30px;
+    /* Adjust the size of the CloseIcon */
+}
+
+
+.navbar-list {
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+}
+
+
+.navbar-divider {
+    margin: 10px 10px;
+}
+
+
+.navbar-item {
+    display: flex;
+    align-items: right;
+}
+
+.navbar-item-text {
+    margin-left: 10px;
+    color: var(--input-color);
+    font-weight: bold;
+
+}
+
+.navbar-logout-text {
+    margin-left: 10px;
+    color: var(--font-color);
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+
+.navbar-item:hover {
+    background-color: var(--text-color);
+    opacity: 0.9;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Add to Navbar.css */
+.MuiBadge-badge {
+    top: 8px !important;
+    right: 8px !important;
+    font-size: 0.75rem;
+    padding: 0 4px;
+    background-color: #ff4444;
+    color: white;
+}
+
+/* Media Query for Small Screens */
+@media (max-width: 768px) {
+    .Navbar {
+        flex-direction: column;
+        /* Stacks items vertically */
+        align-items: flex-start;
+        /* Aligns items to the left */
+        padding: 20px;
+        /* Increases padding for touch-friendliness */
+    }
+}
+
+/* Media Query for Extra Small Screens */
+@media (max-width: 480px) {
+    .Navbar {
+        padding: 15px;
+        font-size: 0.9rem;
+        /* Reduces font size for smaller screens */
+    }
+}
