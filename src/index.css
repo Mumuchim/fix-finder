@@ -1,0 +1,35 @@
+
+/* ------------------------------------------------------------
+   FixFinder: Remove the light-blue highlight background that
+   appears on the Admin "Show pins" checkbox rows.
+   (Some browsers/extensions/stylesheets apply a background to
+   labels containing checked inputs.)
+   ------------------------------------------------------------ */
+
+.ffPinFilterLabel {
+  background: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* Force NO background even when the checkbox is checked */
+.ffPinFilterLabel:has(input[type='checkbox']:checked) {
+  background: transparent !important;
+}
+
+/* Also remove any focus/active highlight */
+.ffPinFilterLabel:focus,
+.ffPinFilterLabel:active,
+.ffPinFilterLabel:focus-visible,
+.ffPinFilterLabel:focus-within {
+  background: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.ffPinFilterLabel * {
+  outline: none !important;
+  box-shadow: none !important;
+}

@@ -14,17 +14,18 @@ import { createTheme } from '@mui/material/styles';
 import Report from './ReportForm';
 import CautionIcon from '../assets/images/Caution_noshadow.png';
 import CautionHoverIcon from '../assets/images/Caution_symbol.png';
-import CleaningIcon from '../assets/images/Cleaning_shadow.png';
+import CleaningIcon from '../assets/images/Cleaning_noshadow.png';
 import CleaningHoverIcon from '../assets/images/Cleaning_symbol.png';
-import ElectricalIcon from '../assets/images/Electrical Hazard_shadow.png';
+import ElectricalIcon from '../assets/images/Electrical Hazard_noshadow.png';
 import ElectricalHoverIcon from '../assets/images/Electrical Hazard_symbol.png';
-import ITIcon from '../assets/images/IT Maintenance_shadow.png';
+import ITIcon from '../assets/images/IT Maintenance_noshadow.png';
 import ITHoverIcon from '../assets/images/IT Maintenance_symbol.png';
-import RepairIcon from '../assets/images/Repair_shadow.png';
+import RepairIcon from '../assets/images/Repair_noshadow.png';
 import RepairHoverIcon from '../assets/images/Repair_symbol.png';
-import RequestIcon from '../assets/images/Request_shadow.png';
+import RequestIcon from '../assets/images/Request_noshadow.png';
 import RequestHoverIcon from '../assets/images/Request_symbol.png';
 import supabase from "../helper/supabaseClient";
+import { playPinHoverSfx, playSlideSfx, unlockAudio } from '../helper/sfx';
 
 
 
@@ -48,6 +49,10 @@ const PinSidebar = ({ isOpen, setIsOpen }) => {
 
     const toggleDrawer = (open) => {
         setIsOpen(open);
+        if (open) {
+            unlockAudio();
+            playSlideSfx();
+        }
     };
 
     const pinData = [
@@ -327,7 +332,12 @@ const PinSidebar = ({ isOpen, setIsOpen }) => {
                                     backgroundColor: '#457B9D',
                                 },
                             }}
-                            onMouseEnter={() => setHoveredPin(id)}
+                            onMouseEnter={() => {
+                                setHoveredPin(id);
+                                // hover sound only for pin selections
+                                unlockAudio();
+                                playPinHoverSfx();
+                            }}
                             onMouseLeave={() => setHoveredPin(null)}
                             onClick={(e) => handlePinClick(id, true, e)}
                         >

@@ -256,15 +256,18 @@ import HistoryIcon from '@mui/icons-material/History';
 import EditIcon from '@mui/icons-material/Edit';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import PersonIcon from '@mui/icons-material/Person';
+import SettingsIcon from '@mui/icons-material/Settings';
 import supabase from "../helper/supabaseClient";
 import '../css/Navbar.css';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Badge from '@mui/material/Badge';
+import SettingsModal from './SettingsModal';
+import { playSlideSfx } from '../helper/sfx';
 
 const Navbar = ({ userDetails }) => {
     const [state, setState] = useState({ left: false });
+    const [settingsOpen, setSettingsOpen] = useState(false);
     const [userName, setUserName] = useState('');
     const [userRole, setUserRole] = useState('');
     const [userID, setUserID] = useState(null);
@@ -303,7 +306,7 @@ const Navbar = ({ userDetails }) => {
             .from('notifications')
             .select('*', { count: 'exact', head: true })
             .eq('user_id', userId)
-            .eq('read', false);
+            .eq('is_read', false);
 
         if (!error) {
             setNotificationCount(count || 0);
@@ -342,6 +345,8 @@ const Navbar = ({ userDetails }) => {
             return;
         }
         setState({ ...state, [anchor]: open });
+        // Slide SFX for both opening and closing the sidebar.
+        playSlideSfx();
     };
 
     const signOut = async () => {
@@ -369,10 +374,50 @@ const Navbar = ({ userDetails }) => {
     const handleItemClick = (path) => {
         if (path === '/logout') {
             signOut();
+        } else if (path === '__settings__') {
+            setSettingsOpen(true);
         } else {
             navigate(path);
         }
     };
+
+    // Red "pill" badge style (copied from the Floor button style)
+    const notifBadge = (count) => (
+        <span
+            style={{
+                backgroundColor: '#e63946',
+                borderRadius: '999px',
+                padding: '2px 8px',
+                fontSize: '0.75em',
+                fontWeight: 'bold',
+                lineHeight: 1,
+                minWidth: '22px',
+                textAlign: 'center',
+                color: '#fff',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.12)',
+            }}
+        >
+            {count}
+        </span>
+    );
+
+    const notificationsIconWithBadge = (count) => (
+        <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+            <NotificationsIcon />
+            {count > 0 ? (
+                <span
+                    style={{
+                        position: 'absolute',
+                        top: '-8px',
+                        right: '-14px',
+                        pointerEvents: 'none',
+                    }}
+                >
+                    {notifBadge(count)}
+                </span>
+            ) : null}
+        </span>
+    );
 
     const list = (anchor) => (
         <Box
@@ -382,7 +427,7 @@ const Navbar = ({ userDetails }) => {
         >
             <Box className="navbar-header">
                 <Typography variant="h6">{`Welcome, ${userName}`}</Typography>
-                <IconButton onClick={toggleDrawer(anchor, false)} className="navbar-close-btn">
+                <IconButton onClick={toggleDrawer(anchor, false)} className="navbar-close-btn" data-sfx="click">
                     <CloseIcon />
                 </IconButton>
             </Box>
@@ -394,21 +439,22 @@ const Navbar = ({ userDetails }) => {
                     ...((userRole !== 'admin' && userRole !== 'it admin') ? ([{
                         text: 'Notification',
                         path: '/notification',
-                        icon: notificationCount > 0 ? (
-                            <Badge badgeContent={notificationCount} color="error">
-                                <NotificationsIcon />
-                            </Badge>
-                        ) : (
-                            <NotificationsIcon />
-                        )
+                        icon: <NotificationsIcon />,
+                        badgeCount: notificationCount,
                     }]) : ([])),
                     { text: 'Report History', path: '/history', icon: <HistoryIcon /> },
                     { text: 'Profile', path: '/profile', icon: <EditIcon /> },
-                ].map(({ text, path, icon }) => (
+                    { text: 'Settings', path: '__settings__', icon: <SettingsIcon /> },
+                ].map(({ text, path, icon, badgeCount }) => (
                     <ListItem key={text} disablePadding className="navbar-item">
-                        <ListItemButton onClick={() => handleItemClick(path)}>
+                        <ListItemButton onClick={() => handleItemClick(path)} data-sfx="click">
                             <ListItemIcon>{icon}</ListItemIcon>
                             <ListItemText primary={text} />
+                            {typeof badgeCount === 'number' && badgeCount > 0 ? (
+                              <Box sx={{ marginLeft: 'auto', paddingRight: '6px' }}>
+                                {notifBadge(badgeCount)}
+                              </Box>
+                            ) : null}
                         </ListItemButton>
                     </ListItem>
                 ))}
@@ -416,7 +462,7 @@ const Navbar = ({ userDetails }) => {
             <Divider className="navbar-divider" />
             <List className="navbar-list-logout">
                 <ListItem disablePadding className="navbar-item">
-                    <ListItemButton>
+                    <ListItemButton data-sfx="click">
                         <ListItemIcon className="navbar-item-icon">
                             <PersonIcon />
                         </ListItemIcon>
@@ -424,7 +470,7 @@ const Navbar = ({ userDetails }) => {
                     </ListItemButton>
                 </ListItem>
                 <ListItem disablePadding className="navbar-item">
-                    <ListItemButton onClick={() => handleItemClick('/logout')}>
+                    <ListItemButton onClick={() => handleItemClick('/logout')} data-sfx="click">
                         <ListItemIcon className="navbar-item-icon">
                             <LogoutIcon />
                         </ListItemIcon>
@@ -449,51 +495,31 @@ const Navbar = ({ userDetails }) => {
                     }
                 }}
             >
-                {(userRole !== 'admin' && userRole !== 'it admin') && notificationCount > 0 ? (
-                    <Badge 
-                        badgeContent={notificationCount} 
-                        color="error"
-                        overlap="rectangular"
-                        anchorOrigin={{
-                            vertical: 'top',
-                            horizontal: 'right',
-                        }}
-                        sx={{
-                            '& .MuiBadge-badge': {
-                                right: 8,
-                                top: 8,
-                                transform: 'scale(1) translate(50%, -50%)',
-                                pointerEvents: 'none'
-                            }
-                        }}
-                    >
-                        <IconButton
-                            onClick={toggleDrawer('left', true)}
-                            size="large"
-                            sx={{
-                                padding: '12px',
-                                '&:hover': {
-                                    backgroundColor: 'transparent'
-                                }
-                            }}
-                        >
-                            <MenuIcon 
-                                sx={{
-                                    fontSize: '2rem',
-                                    color: '#ffffff'
-                                }} 
-                            />
-                        </IconButton>
-                    </Badge>
-                ) : (
+                <span style={{ position: 'relative', display: 'inline-flex' }}>
                     <IconButton
                         onClick={toggleDrawer('left', true)}
                         size="large"
-                        sx={{ padding: '12px' }}
+                        sx={{
+                            padding: '12px',
+                            '&:hover': { backgroundColor: 'transparent' }
+                        }}
+                        data-sfx="noclick"
                     >
                         <MenuIcon sx={{ fontSize: '2rem', color: '#ffffff' }} />
                     </IconButton>
-                )}
+                    {(userRole !== 'admin' && userRole !== 'it admin') && notificationCount > 0 ? (
+                        <span
+                            style={{
+                                position: 'absolute',
+                                top: '2px',
+                                right: '2px',
+                                pointerEvents: 'none',
+                            }}
+                        >
+                            {notifBadge(notificationCount)}
+                        </span>
+                    ) : null}
+                </span>
             </Box>
             <Drawer
                 anchor="left"
@@ -505,6 +531,8 @@ const Navbar = ({ userDetails }) => {
             >
                 {list('left')}
             </Drawer>
+
+            <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
         </div>
     );
 };

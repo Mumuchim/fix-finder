@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { areas1, areas2 } from "../helper/areas";
 import supabase from "../helper/supabaseClient";
-import { playPinSfx } from "../helper/sfx";
+import { playPinSfx, playPinHoverSfx } from "../helper/sfx";
 // import CircularProgress from "@mui/material/CircularProgress";
 import { 
     Alert,
@@ -22,26 +22,27 @@ import CautionIcon from '../assets/images/Caution_noshadow.png';
 import CautionHoverIcon from '../assets/images/Caution_symbol.png';
 import CautionInProgressIcon from '../assets/images/Caution_inprogress.png';
 import CautionDoneIcon from '../assets/images/Caution_done.png';
-import CleaningIcon from '../assets/images/Cleaning_shadow.png';
+import CleaningIcon from '../assets/images/Cleaning_noshadow.png';
 import CleaningHoverIcon from '../assets/images/Cleaning_symbol.png';
 import CleaningInProgressIcon from '../assets/images/Cleaning_inprogress.png';
 import CleaningDoneIcon from '../assets/images/Cleaning_done.png';
-import ElectricalIcon from '../assets/images/Electrical Hazard_shadow.png';
+import ElectricalIcon from '../assets/images/Electrical Hazard_noshadow.png';
 import ElectricalHoverIcon from '../assets/images/Electrical Hazard_symbol.png';
 import ElectricalInProgressIcon from '../assets/images/Electrical Hazard_inprogress.png';
 import ElectricalDoneIcon from '../assets/images/Electrical Hazard_done.png';
-import ITIcon from '../assets/images/IT Maintenance_shadow.png';
+import ITIcon from '../assets/images/IT Maintenance_noshadow.png';
 import ITHoverIcon from '../assets/images/IT Maintenance_symbol.png';
 import ITInProgressIcon from '../assets/images/IT Maintenance_inprogress.png';
 import ITDoneIcon from '../assets/images/IT Maintenance_done.png';
-import RepairIcon from '../assets/images/Repair_shadow.png';
+import RepairIcon from '../assets/images/Repair_noshadow.png';
 import RepairHoverIcon from '../assets/images/Repair_symbol.png';
 import RepairInProgressIcon from '../assets/images/Repair_inprogress.png';
 import RepairDoneIcon from '../assets/images/Repair_done.png';
-import RequestIcon from '../assets/images/Request_shadow.png';
+import RequestIcon from '../assets/images/Request_noshadow.png';
 import RequestHoverIcon from '../assets/images/Request_symbol.png';
 import RequestInProgressIcon from '../assets/images/Request_inprogress.png';
 import RequestDoneIcon from '../assets/images/Request_done.png';
+import FlyingClouds from '../assets/images/flying_clouds.png';
 
 const pinTypes = [
     { id: 1, label: "Caution", icon: CautionIcon, hoverIcon: CautionHoverIcon, inProgressIcon: CautionInProgressIcon, doneIcon: CautionDoneIcon },
@@ -138,6 +139,7 @@ const FloorContent = ({ areas, showImages, pins, onAreaClick, onPinClick, textSt
                     onClick={() => onPinClick(pin)}
                     style={{ cursor: "pointer" }}
                     className="ff-pin-group"
+                    data-sfx="click"
                 >
                     {isBlinking && (
                         <circle
@@ -181,6 +183,12 @@ const FloorMap = () => {
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [showReportModal, setShowReportModal] = useState(false);
     const [userRole, setUserRole] = useState('');
+    // Admin-only pin visibility filters
+    const [adminPinFilters, setAdminPinFilters] = useState({
+        pending: true,
+        inProgress: true,
+        done: true,
+    });
     const [selectedAreaLabel, setSelectedAreaLabel] = useState('');
     const [showNotification, setShowNotification] = useState(false);
     const [latestNotification, setLatestNotification] = useState(null);
@@ -193,6 +201,24 @@ const FloorMap = () => {
     const pendingJobsCount = pins.filter(p => String(p.status || '').trim().toLowerCase() === 'pending').length;
     const navigate = useNavigate();
     const location = useLocation();
+
+    const isAdmin = (userRole === 'admin' || userRole === 'it admin');
+
+    const normalizeStatus = (s) => String(s || '').trim().toLowerCase();
+    const isDoneStatus = (s) => ['resolved','done','finished','completed'].includes(normalizeStatus(s));
+    const isInProgressStatus = (s) => normalizeStatus(s) === 'in progress';
+    const isPendingStatus = (s) => normalizeStatus(s) === 'pending';
+
+    const filteredPinsForFloor = pins
+      .filter(pin => pin.floor === String(currentFloor))
+      .filter(pin => {
+        if (!isAdmin) return true;
+        if (isPendingStatus(pin.status)) return !!adminPinFilters.pending;
+        if (isInProgressStatus(pin.status)) return !!adminPinFilters.inProgress;
+        if (isDoneStatus(pin.status)) return !!adminPinFilters.done;
+        // Unknown/other status stays visible
+        return true;
+      });
 
     // When coming from notifications, we can focus + blink a specific pin.
     const [blinkPinId, setBlinkPinId] = useState(null);
@@ -772,6 +798,12 @@ useEffect(() => {
 
     return (
         <div style={responsiveStyles.container}>
+            <style>{`
+              @keyframes ffCloudSlide {
+                0% { transform: translateX(110vw); }
+                100% { transform: translateX(-160vw); }
+              }
+            `}</style>
             {(isLoading || loadingAction) ? (
                 <div style={{
                     display: "flex",
@@ -787,13 +819,42 @@ useEffect(() => {
                 </div>
             ) : (
                 <> 
+                    {/* Flying clouds overlay (visual only; never blocks clicks) */}
+                    <div
+                      style={{
+                        position: 'fixed',
+                        top: '58px',
+                        left: 0,
+                        width: '100vw',
+                        height: '140px',
+                        zIndex: 500,
+                        pointerEvents: 'none',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <img
+                        src={FlyingClouds}
+                        alt=""
+                        style={{
+                          position: 'absolute',
+                          top: '0px',
+                          height: '140px',
+                          width: 'auto',
+                          opacity: 0.9,
+                          animation: 'ffCloudSlide 30s linear infinite',
+                          userSelect: 'none',
+                        }}
+                        draggable={false}
+                      />
+                    </div>
+
                     {(userRole === 'admin' || userRole === 'it admin') && (
                         <div style={{
                             position: 'fixed',
                             top: '80px',
                             right: '16px',
                             zIndex: 1002,
-                            pointerEvents: 'none'
+                            pointerEvents: 'auto'
                         }}>
                             <div style={{
                                 background: '#1D3557',
@@ -812,6 +873,41 @@ useEffect(() => {
                                     <div style={{ borderTop: '1px solid rgba(255,255,255,0.18)', paddingTop: '6px' }}>
                                         <div style={{ fontSize: '12px', opacity: 0.9 }}>Pending jobs</div>
                                         <div style={{ fontSize: '24px', fontWeight: 700, lineHeight: 1 }}>{pendingJobsCount}</div>
+                                    </div>
+
+                                    {/* Admin pin visibility filters */}
+                                    <div style={{
+                                        borderTop: '1px solid rgba(255,255,255,0.18)',
+                                        paddingTop: '8px',
+                                        marginTop: '2px'
+                                    }}>
+                                        <div style={{ fontSize: '12px', opacity: 0.9, marginBottom: '6px' }}>
+                                            Show pins
+                                        </div>
+                                        <label className="ffPinFilterLabel" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', cursor: 'pointer', background: 'transparent' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={!!adminPinFilters.pending}
+                                                onChange={(e) => setAdminPinFilters(p => ({ ...p, pending: e.target.checked }))}
+                                            />
+                                            Pending
+                                        </label>
+                                        <label className="ffPinFilterLabel" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', cursor: 'pointer', marginTop: '4px', background: 'transparent' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={!!adminPinFilters.inProgress}
+                                                onChange={(e) => setAdminPinFilters(p => ({ ...p, inProgress: e.target.checked }))}
+                                            />
+                                            In progress
+                                        </label>
+                                        <label className="ffPinFilterLabel" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', cursor: 'pointer', marginTop: '4px', background: 'transparent' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={!!adminPinFilters.done}
+                                                onChange={(e) => setAdminPinFilters(p => ({ ...p, done: e.target.checked }))}
+                                            />
+                                            Finished
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -890,6 +986,7 @@ useEffect(() => {
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: '8px',
         // Add margin to prevent overlap if button is near corner
         marginRight: '120px' // Adjust based on your needs
@@ -946,7 +1043,7 @@ useEffect(() => {
                         <FloorContent
                             areas={areasToDisplay}
                             showImages={showImages}
-                            pins={pins.filter(pin => pin.floor === String(currentFloor))}
+                            pins={filteredPinsForFloor}
                             // pins={pins}
                             onAreaClick={handleAreaClick}
                             onPinClick={handlePinClick}
@@ -979,6 +1076,8 @@ useEffect(() => {
                                             transition: 'all 0.2s',
                                         }}
                                         onClick={() => handlePinSelect(pin)}
+                                        data-sfx="nohover"
+                                        onMouseEnter={() => { try { playPinHoverSfx(); } catch {} }}
                                         onMouseOver={(e) => (e.currentTarget.children[0].src = pin.icon)}
                                         onMouseOut={(e) => (e.currentTarget.children[0].src = pin.hoverIcon)}
                                     >

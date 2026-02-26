@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import supabase from "../helper/supabaseClient";
 import { Navigate } from "react-router-dom";
 import bgmap from "../assets/bgmap.png";
+import { startBgm, stopBgm } from "../helper/sfx";
 
 function Wrapper({ children }) {
     const [authenticated, setAuthenticated] = useState(false);
@@ -17,7 +18,29 @@ function Wrapper({ children }) {
         };
 
         getSession();
+
+        // Keep auth state in sync (start/stop BGM with login/logout).
+        const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+            const isAuthed = !!session;
+            setAuthenticated(isAuthed);
+            setLoading(false);
+            if (isAuthed) startBgm();
+            else stopBgm();
+        });
+
+        return () => {
+            try { sub?.subscription?.unsubscribe?.(); } catch {}
+            // Ensure BGM doesn't leak if the authenticated wrapper unmounts.
+            stopBgm();
+        };
     }, []);
+
+    // Start/stop BGM when auth status changes (e.g., hard refresh while logged in).
+    useEffect(() => {
+        if (authenticated) startBgm();
+        else stopBgm();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [authenticated]);
 
     // Ensure the authenticated app screens use the map background.
     useEffect(() => {

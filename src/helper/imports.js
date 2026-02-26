@@ -17,15 +17,15 @@ import Report from './ReportForm'; // Import your component
 // Import your images here
 import CautionIcon from '../assets/images/Caution_noshadow.png';
 import CautionHoverIcon from '../assets/images/Caution_symbol.png';
-import CleaningIcon from '../assets/images/Cleaning_shadow.png';
+import CleaningIcon from '../assets/images/Cleaning_noshadow.png';
 import CleaningHoverIcon from '../assets/images/Cleaning_symbol.png';
-import ElectricalIcon from '../assets/images/Electrical Hazard_shadow.png';
+import ElectricalIcon from '../assets/images/Electrical Hazard_noshadow.png';
 import ElectricalHoverIcon from '../assets/images/Electrical Hazard_symbol.png';
-import ITIcon from '../assets/images/IT Maintenance_shadow.png';
+import ITIcon from '../assets/images/IT Maintenance_noshadow.png';
 import ITHoverIcon from '../assets/images/IT Maintenance_symbol.png';
-import RepairIcon from '../assets/images/Repair_shadow.png';
+import RepairIcon from '../assets/images/Repair_noshadow.png';
 import RepairHoverIcon from '../assets/images/Repair_symbol.png';
-import RequestIcon from '../assets/images/Request_shadow.png';
+import RequestIcon from '../assets/images/Request_noshadow.png';
 import RequestHoverIcon from '../assets/images/Request_symbol.png';
 
 export {

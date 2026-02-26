@@ -21,10 +21,12 @@ import Status from "./components/Status";
 import Pin from "./components/Pin";
 import Register from "./pages/Register";
 import Notification from "./components/Notification";
+import SfxBoot from "./components/SfxBoot";
 
 function App() {
   return (
     <ThemeProvider theme={theme}>
+      <SfxBoot />
       <BrowserRouter>
         <Routes>
           {/* Landing page */}

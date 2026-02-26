@@ -164,12 +164,12 @@ const NotificationPage = () => {
   const markAsRead = async (id) => {
     const { error } = await supabase
       .from('notifications')
-      .update({ read: true })
+      .update({ is_read: true })
       .eq('id', id);
 
     if (!error) {
       setNotifications(prev =>
-        prev.map(n => n.id === id ? { ...n, read: true } : n)
+        prev.map(n => n.id === id ? { ...n, is_read: true } : n)
       );
     }
   };
@@ -177,7 +177,7 @@ const NotificationPage = () => {
   const openNotification = async (notification) => {
     setSelectedNotification(notification);
     setDetailsOpen(true);
-    if (!notification.read) {
+    if (!notification.is_read) {
       await markAsRead(notification.id);
     }
   };
@@ -193,12 +193,12 @@ const NotificationPage = () => {
 
     const { error } = await supabase
       .from('notifications')
-      .update({ read: true })
+      .update({ is_read: true })
       .eq('user_id', user.id)
-      .eq('read', false);
+      .eq('is_read', false);
 
     if (!error) {
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
     }
   };
 
@@ -226,7 +226,7 @@ const NotificationPage = () => {
     setLatestNotification(null);
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   const ClearConfirmationDialog = () => (
     <Dialog
@@ -406,30 +406,41 @@ const NotificationPage = () => {
           <List>
             {notifications.map((notification) => (
               <React.Fragment key={notification.id}>
-                <NotificationItem elevation={1}>
+                <NotificationItem
+                  elevation={1}
+                  sx={{
+                    backgroundColor: notification.is_read ? '#ffffff' : '#d7e9ff',
+                    borderLeft: notification.is_read ? '4px solid transparent' : '4px solid #1d3557',
+                  }}
+                >
                   <ListItem onClick={() => openNotification(notification)} sx={{ 
                     padding: isMobile ? theme.spacing(1) : theme.spacing(2),
                     flexDirection: 'row',
                     alignItems: 'center'
                   }}>
                     <ListItemIcon sx={{ minWidth: isMobile ? 40 : 56 }}>
-                      {notification.type === 'status_update' ? (
-                        notification.message.toLowerCase().includes('denied') ? (
-                          <FaTimes color="#ff4444" style={{ fontSize: isMobile ? '1.2rem' : '1.5rem' }} />
-                        ) : (
-                          <FaCheckCircle color="#4caf50" style={{ fontSize: isMobile ? '1.2rem' : '1.5rem' }} />
-                        )
-                      ) : (
-                        <FaEnvelope color="#2196f3" style={{ fontSize: isMobile ? '1.2rem' : '1.5rem' }} />
-                      )}
+                      {(() => {
+                        const msg = String(notification.message || '').toLowerCase();
+                        const isAdminRemovedPin = msg.includes('admin remove your pin');
+                        if (isAdminRemovedPin) {
+                          return <FaCheckCircle color="#4caf50" style={{ fontSize: isMobile ? '1.2rem' : '1.5rem' }} />;
+                        }
+                        if (notification.type === 'status_update') {
+                          return msg.includes('denied')
+                            ? <FaTimes color="#ff4444" style={{ fontSize: isMobile ? '1.2rem' : '1.5rem' }} />
+                            : <FaCheckCircle color="#4caf50" style={{ fontSize: isMobile ? '1.2rem' : '1.5rem' }} />;
+                        }
+                        return <FaEnvelope color="#2196f3" style={{ fontSize: isMobile ? '1.2rem' : '1.5rem' }} />;
+                      })()}
                     </ListItemIcon>
                     <ListItemText
                       primary={notification.type === 'status_update' ? 'Status Update' : 'New Message'}
                       secondary={notification.message}
                       sx={{ 
-                        opacity: notification.read ? 0.6 : 1,
+                        opacity: notification.is_read ? 0.72 : 1,
                         transition: 'opacity 0.3s ease',
                         '& .MuiListItemText-primary': {
+                          fontWeight: notification.is_read ? 500 : 800,
                           fontSize: isMobile ? '0.9rem' : '1rem'
                         },
                         '& .MuiListItemText-secondary': {
@@ -440,11 +451,12 @@ const NotificationPage = () => {
                     <IconButton 
                       edge="end" 
                       aria-label="mark as read"
-                      onClick={(e) => { e.stopPropagation(); markAsRead(notification.id); }}
+                      onClick={(e) => { e.stopPropagation(); markAllAsRead(); }}
                       size={isMobile ? "small" : "medium"}
+                      disabled={unreadCount === 0}
                     >
-                      {notification.read ? (
-                        <FaCheckCircle color="#4caf50" />
+                      {unreadCount > 0 ? (
+                        <FaEnvelope color="#1d3557" />
                       ) : (
                         <FaEye color="#666" />
                       )}

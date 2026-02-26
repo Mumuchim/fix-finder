@@ -91,9 +91,7 @@ export default function SettingsModal({ open, onClose }) {
               }}
             />
           </Box>
-          <Typography variant="caption" sx={{ opacity: 0.75 }}>
-            Tip: audio starts after your first click/tap (browser policy).
-          </Typography>
+          {/* Tip removed per UI request */}
         </Box>
       </DialogContent>
       <DialogActions>
