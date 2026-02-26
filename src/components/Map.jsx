@@ -42,7 +42,19 @@ import RequestIcon from '../assets/images/Request_noshadow.png';
 import RequestHoverIcon from '../assets/images/Request_symbol.png';
 import RequestInProgressIcon from '../assets/images/Request_inprogress.png';
 import RequestDoneIcon from '../assets/images/Request_done.png';
-import FlyingClouds from '../assets/images/flying_clouds.png';
+import FlyingClouds1 from '../assets/images/flying_clouds.png';
+import FlyingClouds2 from '../assets/images/flying_clouds_2.png';
+import FlyingClouds3 from '../assets/images/flying_clouds_3.png';
+import FlyingClouds4 from '../assets/images/flying_clouds_4.png';
+import FlyingClouds5 from '../assets/images/flying_clouds_5.png';
+
+const flyingCloudAssets = [
+    FlyingClouds1,
+    FlyingClouds2,
+    FlyingClouds3,
+    FlyingClouds4,
+    FlyingClouds5,
+];
 
 const pinTypes = [
     { id: 1, label: "Caution", icon: CautionIcon, hoverIcon: CautionHoverIcon, inProgressIcon: CautionInProgressIcon, doneIcon: CautionDoneIcon },
@@ -235,6 +247,64 @@ const FloorMap = () => {
 
     // Coordinate-based focus marker (used by Admin "Go to Map" in Report History)
     const [focusPulse, setFocusPulse] = useState(null);
+
+    // Flying clouds (visual-only). Cycle through the cloud sprites in order,
+    // spawning a new one every 30 seconds.
+    const [clouds, setClouds] = useState([]);
+    const cloudIndexRef = useRef(0);
+    const cloudCleanupTimersRef = useRef(new Map());
+
+    useEffect(() => {
+        const CLOUD_INTERVAL_MS = 30000;
+
+        const spawnCloud = () => {
+            const idx = cloudIndexRef.current % flyingCloudAssets.length;
+            cloudIndexRef.current = (cloudIndexRef.current + 1) % flyingCloudAssets.length;
+
+            const cloudId = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+            // Random lane (top / middle / bottom) using viewport height so it works on any screen
+const lanes = [
+    { min: 6, max: 18 },   // top lane (vh)
+    { min: 40, max: 55 },  // middle lane (vh)
+    { min: 70, max: 86 },  // bottom lane (vh)
+];
+const lane = lanes[Math.floor(Math.random() * lanes.length)];
+const topVh = (lane.min + Math.random() * (lane.max - lane.min)).toFixed(1) + 'vh';
+
+// Gentle parallax: keep clouds close to original size (slightly bigger)
+// so they never dominate the viewport.
+const depth = Math.random(); // 0 (far) -> 1 (near)
+const scale = Number((0.96 + depth * 0.14).toFixed(2));      // 0.96 .. 1.10
+const duration = Math.round(42 - depth * 16);                // 42s .. 26s
+const opacity = Number((0.60 + depth * 0.28).toFixed(2));    // 0.60 .. 0.88
+
+const newCloud = { id: cloudId, src: flyingCloudAssets[idx], top: topVh, scale, duration, opacity };
+
+            setClouds((prev) => [...prev, newCloud]);
+
+            // Cleanup AFTER the animation completes (plus a small buffer),
+            // so clouds never disappear while still on-screen.
+            const lifetimeMs = Math.round(((newCloud.duration ?? 30) + 6) * 1000);
+            const t = setTimeout(() => {
+                setClouds((prev) => prev.filter((c) => c.id !== cloudId));
+                cloudCleanupTimersRef.current.delete(cloudId);
+            }, lifetimeMs);
+
+            cloudCleanupTimersRef.current.set(cloudId, t);
+        };
+
+        // Spawn immediately, then every 15 seconds
+        spawnCloud();
+        const interval = setInterval(spawnCloud, CLOUD_INTERVAL_MS);
+
+        return () => {
+            clearInterval(interval);
+            for (const t of cloudCleanupTimersRef.current.values()) {
+                clearTimeout(t);
+            }
+            cloudCleanupTimersRef.current.clear();
+        };
+    }, []);
 
     // Capture focus state from route state (and clear it so refresh doesn't keep re-triggering)
     useEffect(() => {
@@ -800,8 +870,8 @@ useEffect(() => {
         <div style={responsiveStyles.container}>
             <style>{`
               @keyframes ffCloudSlide {
-                0% { transform: translateX(110vw); }
-                100% { transform: translateX(-160vw); }
+                0% { left: 110vw; }
+                100% { left: -160vw; }
               }
             `}</style>
             {(isLoading || loadingAction) ? (
@@ -826,26 +896,34 @@ useEffect(() => {
                         top: '58px',
                         left: 0,
                         width: '100vw',
-                        height: '140px',
+                        height: '100vh',
                         zIndex: 500,
                         pointerEvents: 'none',
                         overflow: 'hidden',
                       }}
                     >
-                      <img
-                        src={FlyingClouds}
-                        alt=""
-                        style={{
-                          position: 'absolute',
-                          top: '0px',
-                          height: '140px',
-                          width: 'auto',
-                          opacity: 0.9,
-                          animation: 'ffCloudSlide 30s linear infinite',
-                          userSelect: 'none',
-                        }}
-                        draggable={false}
-                      />
+                      {clouds.map((c) => (
+                        <img
+                          key={c.id}
+                          src={c.src}
+                          alt=""
+                          style={{
+                            position: 'absolute',
+                            top: c.top || '8vh',
+                            left: '110vw',
+                            // Keep clouds just slightly bigger than the original asset
+                            // (never full-screen) so they don't overwhelm the UI.
+                            height: 'clamp(110px, 18vh, 220px)',
+                            width: 'auto',
+                            opacity: (c.opacity ?? 0.85),
+                            transform: `scale(${c.scale ?? 1})`,
+                            transformOrigin: 'top left',
+                            animation: `ffCloudSlide ${c.duration ?? 30}s linear forwards`,
+                            userSelect: 'none',
+                          }}
+                          draggable={false}
+                        />
+                      ))}
                     </div>
 
                     {(userRole === 'admin' || userRole === 'it admin') && (
