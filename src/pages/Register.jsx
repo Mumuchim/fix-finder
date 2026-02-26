@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     Box,
@@ -18,6 +18,7 @@ import supabase from "../helper/supabaseClient";
 import { FaUser, FaEnvelope, FaLock } from "react-icons/fa";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link } from 'react-router-dom';
+import bglogin from "../assets/bglogin.png";
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
     padding: theme.spacing(4),
@@ -49,6 +50,31 @@ const AuthForm = () => {
     const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
+
+    // Login/Admin panel should use the login background.
+    useEffect(() => {
+        const prev = {
+            backgroundImage: document.body.style.backgroundImage,
+            backgroundSize: document.body.style.backgroundSize,
+            backgroundPosition: document.body.style.backgroundPosition,
+            backgroundRepeat: document.body.style.backgroundRepeat,
+            backgroundAttachment: document.body.style.backgroundAttachment,
+        };
+
+        document.body.style.backgroundImage = `url(${bglogin})`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+        document.body.style.backgroundRepeat = 'no-repeat';
+        document.body.style.backgroundAttachment = 'fixed';
+
+        return () => {
+            document.body.style.backgroundImage = prev.backgroundImage;
+            document.body.style.backgroundSize = prev.backgroundSize;
+            document.body.style.backgroundPosition = prev.backgroundPosition;
+            document.body.style.backgroundRepeat = prev.backgroundRepeat;
+            document.body.style.backgroundAttachment = prev.backgroundAttachment;
+        };
+    }, []);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;

@@ -52,19 +52,25 @@ const pinTypes = [
     { id: 6, label: "Request", icon: RequestIcon, hoverIcon: RequestHoverIcon, inProgressIcon: RequestInProgressIcon, doneIcon: RequestDoneIcon },
 ];
 
-const FloorContent = ({ svgRef, areas, showImages, pins, onAreaClick, onPinClick, textStyle, blinkPinId, focusPulse }) => (
+const FloorContent = ({ areas, showImages, pins, onAreaClick, onPinClick, textStyle, blinkPinId, focusPulse }) => (
     <svg
-        ref={svgRef}
         width="100%"
         height="100%"
         viewBox="0 0 1080 1080"
         preserveAspectRatio="xMidYMid meet"
         xmlns="http://www.w3.org/2000/svg"
+        overflow="visible"
+        style={{ overflow: 'visible' }}
     >
         <style>{`
           @keyframes ffBlinkOpacity {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.25; }
+          }
+
+          /* Hover blink for pins */
+          .ff-pin-group:hover .ff-pin-img {
+            animation: ffBlinkOpacity 0.85s infinite;
           }
         `}</style>
 
@@ -125,15 +131,13 @@ const FloorContent = ({ svgRef, areas, showImages, pins, onAreaClick, onPinClick
             const isInProgress = String(pin.status || '').trim().toLowerCase() === 'in progress';
             const isDone = ['resolved','done','finished','completed'].includes(String(pin.status || '').trim().toLowerCase());
 
-    const dx = Number(pin?.__renderOffset?.dx || 0);
-    const dy = Number(pin?.__renderOffset?.dy || 0);
-
     return (
                 <g
                     key={pinKey}
-                    transform={`translate(${(pin.coordinates.x + dx)}, ${(pin.coordinates.y + dy)})`}
+                    transform={`translate(${pin.coordinates.x}, ${pin.coordinates.y})`}
                     onClick={() => onPinClick(pin)}
                     style={{ cursor: "pointer" }}
+                    className="ff-pin-group"
                 >
                     {isBlinking && (
                         <circle
@@ -150,6 +154,7 @@ const FloorContent = ({ svgRef, areas, showImages, pins, onAreaClick, onPinClick
                         height="90"
                         x="-20"
                         y="-70"
+                        className="ff-pin-img"
                         style={{
                           ...(isBlinking ? { animation: 'ffBlinkOpacity 0.85s infinite' } : {})
                         }}
@@ -179,7 +184,6 @@ const FloorMap = () => {
     const [selectedAreaLabel, setSelectedAreaLabel] = useState('');
     const [showNotification, setShowNotification] = useState(false);
     const [latestNotification, setLatestNotification] = useState(null);
-    const [currentUserId, setCurrentUserId] = useState(null);
     const userRoleRef = useRef(''); // Add ref for user role
     const userRef = useRef(null); // Add ref for user
     const floor1Count = pins.filter(pin => pin.floor === "1").length;
@@ -263,74 +267,9 @@ const FloorMap = () => {
         const updateUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             userRef.current = user;
-            setCurrentUserId(user?.id || null);
         };
         updateUser();
     }, []);
-
-    // Zoom (slider + mouse wheel)
-    const [zoom, setZoom] = useState(1);
-    const mapViewportRef = useRef(null);
-    const svgRef = useRef(null);
-
-    const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
-    const setZoomClamped = (z) => setZoom(clamp(Number(z) || 1, 0.8, 2.5));
-
-    const handleWheelZoom = (e) => {
-        // Only zoom when the pointer is over the map.
-        if (!mapViewportRef.current) return;
-        // Prevent page scroll while zooming the map.
-        e.preventDefault();
-        const delta = e.deltaY;
-        const step = delta > 0 ? -0.08 : 0.08;
-        setZoom(prev => clamp(prev + step, 0.8, 2.5));
-    };
-
-    const clientToSvgCoords = (event) => {
-        const svg = svgRef.current;
-        if (!svg) return null;
-        const rect = svg.getBoundingClientRect();
-        const vb = svg.viewBox?.baseVal;
-        const viewW = vb?.width || 1080;
-        const viewH = vb?.height || 1080;
-        const x = ((event.clientX - rect.left) / rect.width) * viewW;
-        const y = ((event.clientY - rect.top) / rect.height) * viewH;
-        return { x, y };
-    };
-
-    const withAntiOverlap = (list) => {
-        // Group by near-identical coordinates and fan them out slightly.
-        const groups = new Map();
-        const keyFor = (p) => {
-            const c = p?.coordinates || {};
-            const x = Math.round(Number(c.x) || 0);
-            const y = Math.round(Number(c.y) || 0);
-            return `${x},${y}`;
-        };
-
-        list.forEach((p, idx) => {
-            const key = keyFor(p);
-            if (!groups.has(key)) groups.set(key, []);
-            groups.get(key).push({ p, idx });
-        });
-
-        const out = [...list];
-        groups.forEach((arr) => {
-            if (arr.length <= 1) return;
-            const radius = 22; // pixels in SVG space
-            arr.forEach((item, i) => {
-                const angle = (i / arr.length) * Math.PI * 2;
-                out[item.idx] = {
-                    ...item.p,
-                    __renderOffset: {
-                        dx: Math.cos(angle) * radius,
-                        dy: Math.sin(angle) * radius,
-                    }
-                };
-            });
-        });
-        return out;
-    };
 
 
     const toggleFloor = () => {
@@ -360,9 +299,11 @@ const FloorMap = () => {
             return;
         }
 
-        const coords = clientToSvgCoords(event);
-        if (!coords) return;
-        const { x, y } = coords;
+        const svg = event.currentTarget.ownerSVGElement;
+        const point = svg.createSVGPoint();
+        point.x = event.clientX;
+        point.y = event.clientY;
+        const { x, y } = point.matrixTransform(svg.getScreenCTM().inverse());
 
         setSelectedPosition({ x, y });
         setSelectedAreaLabel(area.label);
@@ -767,8 +708,8 @@ useEffect(() => {
             },
         },
         button: {
-            padding: "clamp(6px, 1.2vw, 10px) clamp(10px, 1.8vw, 16px)",
-            paddingLeft: "clamp(8px, 1.4vw, 12px)",
+            // Slightly reduced left padding so Floor/Labels buttons feel less "pushed".
+            padding: "clamp(6px, 1.2vw, 10px) clamp(12px, 1.8vw, 16px) clamp(6px, 1.2vw, 10px) clamp(8px, 1.4vw, 12px)",
             fontSize: "clamp(11px, 1.6vw, 14px)",
             backgroundColor: "#457B9D",
             color: "#fae6cfff",
@@ -865,7 +806,7 @@ useEffect(() => {
                                         <div style={{ fontSize: '24px', fontWeight: 700, lineHeight: 1 }}>{activeJobsCount}</div>
                                     </div>
                                     <div style={{ borderTop: '1px solid rgba(255,255,255,0.18)', paddingTop: '6px' }}>
-                                        <div style={{ fontSize: '11px', opacity: 0.85 }}>Pending jobs</div>
+                                        <div style={{ fontSize: '12px', opacity: 0.9 }}>Pending jobs</div>
                                         <div style={{ fontSize: '24px', fontWeight: 700, lineHeight: 1 }}>{pendingJobsCount}</div>
                                     </div>
                                 </div>
@@ -946,8 +887,8 @@ useEffect(() => {
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
-        // Keep a slight nudge so the badge doesn't collide with other UI
-        marginRight: '84px'
+        // Add margin to prevent overlap if button is near corner
+        marginRight: '120px' // Adjust based on your needs
     }}
     onMouseEnter={() => setIsFloorHovered(true)}
     onMouseLeave={() => setIsFloorHovered(false)}
@@ -996,26 +937,12 @@ useEffect(() => {
                         justifyContent: "center",
                         alignItems: "center",
                         padding: "clamp(10px, 2vw, 20px)",
+                        overflow: 'visible',
                     }}>
-                        <div
-                            ref={mapViewportRef}
-                            onWheel={handleWheelZoom}
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                transform: `scale(${zoom})`,
-                                transformOrigin: 'center center',
-                                touchAction: 'none',
-                            }}
-                        >
                         <FloorContent
-                            svgRef={svgRef}
                             areas={areasToDisplay}
                             showImages={showImages}
-                            pins={withAntiOverlap(pins.filter(pin => pin.floor === String(currentFloor)))}
+                            pins={pins.filter(pin => pin.floor === String(currentFloor))}
                             // pins={pins}
                             onAreaClick={handleAreaClick}
                             onPinClick={handlePinClick}
@@ -1023,35 +950,6 @@ useEffect(() => {
                             blinkPinId={blinkPinId}
                             focusPulse={(focusPulse && Number(focusPulse.floor) === Number(currentFloor)) ? focusPulse : null}
                         />
-                        </div>
-                    </div>
-
-                    {/* Zoom control */}
-                    <div style={{
-                        position: 'fixed',
-                        bottom: '24px',
-                        left: '24px',
-                        zIndex: 1001,
-                        background: 'rgba(29, 53, 87, 0.85)',
-                        color: '#fae6cfff',
-                        padding: '10px 12px',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        fontFamily: 'Poppins'
-                    }}>
-                        <span style={{ fontSize: '12px', opacity: 0.95 }}>Zoom</span>
-                        <input
-                            type="range"
-                            min="0.8"
-                            max="2.5"
-                            step="0.05"
-                            value={zoom}
-                            onChange={(e) => setZoomClamped(e.target.value)}
-                            style={{ width: '160px' }}
-                        />
-                        <span style={{ fontSize: '12px', width: '44px', textAlign: 'right' }}>{Math.round(zoom * 100)}%</span>
                     </div>
 
                     {/* Pin Selection Modal */}
@@ -1184,14 +1082,7 @@ useEffect(() => {
             gap: '12px', // Slightly increased gap
             marginTop: '1.5rem',
         }}>
-            {(
-                (userRole === 'admin' || userRole === 'it admin') ||
-                (
-                    ['student', 'faculty'].includes(userRole) &&
-                    String(selectedPin?.user_uid || '') === String(currentUserId || '') &&
-                    String(selectedPin?.status || '').trim().toLowerCase() !== 'in progress'
-                )
-            ) && (
+            {(userRole === 'admin' || userRole === 'it admin') && (
                 <Button
                     style={{
                         fontSize: 'clamp(12px, 2vw, 14px)',

@@ -35,8 +35,7 @@ body {
 
 /* Login-only background (applied by pages/Login.jsx) */
 body.login-bg {
-    /* Force override for login background */
-    background-image: url('../assets/bglogin.png') !important;
+    background-image: url('../assets/bglogin.png');
 }
 
 .wrapper {

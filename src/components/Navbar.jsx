@@ -480,7 +480,7 @@ const Navbar = ({ userDetails }) => {
                             <MenuIcon 
                                 sx={{
                                     fontSize: '2rem',
-                                    color: 'text.primary'
+                                    color: '#ffffff'
                                 }} 
                             />
                         </IconButton>
@@ -491,7 +491,7 @@ const Navbar = ({ userDetails }) => {
                         size="large"
                         sx={{ padding: '12px' }}
                     >
-                        <MenuIcon sx={{ fontSize: '2rem' }} />
+                        <MenuIcon sx={{ fontSize: '2rem', color: '#ffffff' }} />
                     </IconButton>
                 )}
             </Box>
