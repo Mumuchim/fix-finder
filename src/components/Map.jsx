@@ -388,16 +388,20 @@ const FloorMap = () => {
     const handleDeletePin = async () => {
         if (!selectedPin) return;
 
+        const currentUserId = userRef.current?.id;
+        const roleNorm = String(userRole || '').trim().toLowerCase();
+        const isAdminRole = roleNorm === 'admin' || roleNorm === 'it admin';
+
         // New rule: users cannot delete pins that are already "In Progress".
         // Only admins can delete/mark them done.
         const statusNorm = String(selectedPin.status || '').trim().toLowerCase();
-        if (statusNorm === 'in progress' && userRole !== 'admin') {
+        if (statusNorm === 'in progress' && !isAdminRole) {
             alert('You cannot delete a pin that is already In Progress. Please wait for the admin to mark it as done.');
             return;
         }
     
         // Admin confirmation
-        if (userRole === 'admin' && !window.confirm('Are you sure you want to delete this pin?')) {
+        if (isAdminRole && !window.confirm('Are you sure you want to delete this pin?')) {
             return;
         }
     
@@ -422,8 +426,8 @@ const FloorMap = () => {
                 .delete()
                 .eq('pinid', selectedPin.pinid);
 
-            // Notify the report owner (students/faculty) that their pin was removed.
-            if (reportRow?.user_uid) {
+            // Notify the report owner only when an admin removes someone else's pin.
+            if (isAdminRole && reportRow?.user_uid && String(reportRow.user_uid) !== String(currentUserId)) {
                 const place = reportRow.specific_place ? ` at ${reportRow.specific_place}` : '';
                 const title = reportRow.title ? `"${reportRow.title}"` : 'your report';
                 await supabase
@@ -1096,6 +1100,32 @@ useEffect(() => {
                     Delete Pin
                 </Button>
             )}
+
+            {/* Students/Faculty: allow delete if their own pin is NOT In Progress.
+                If Resolved, show a green "Thank you" button instead. */}
+            {['student', 'faculty'].includes(String(userRole || '').trim().toLowerCase()) &&
+                selectedPin?.user_uid &&
+                userRef.current?.id &&
+                String(selectedPin.user_uid) === String(userRef.current.id) &&
+                String(selectedPin.status || '').trim().toLowerCase() !== 'in progress' && (
+                    <Button
+                        style={{
+                            fontSize: 'clamp(12px, 2vw, 14px)',
+                            backgroundColor:
+                                String(selectedPin.status || '').trim().toLowerCase() === 'resolved'
+                                    ? '#2E7D32'
+                                    : '#E63946',
+                            color: '#fae6cfff',
+                            flex: 1,
+                            padding: '8px',
+                        }}
+                        onClick={handleDeletePin}
+                    >
+                        {String(selectedPin.status || '').trim().toLowerCase() === 'resolved'
+                            ? 'Thank you'
+                            : 'Delete'}
+                    </Button>
+                )}
             <Button
                 style={{
                     fontSize: 'clamp(12px, 2vw, 14px)',

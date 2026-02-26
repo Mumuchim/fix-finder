@@ -475,12 +475,23 @@ const ReportStatus = () => {
     const handleDeletePin = async () => {
         if (!pinId) return;
         try {
-            const del = supabase.from('pins').delete().eq('pinid', pinId);
-            const { error } = await del;
-    
-            if (error) throw error;
+            const { error: pinErr } = await supabase
+                .from('pins')
+                .delete()
+                .eq('pinid', pinId);
+
+            if (pinErr) throw pinErr;
+
+            // Keep DB consistent: remove the report row(s) tied to this pin.
+            // Some legacy code uses either `pinid` or `id` for lookup.
+            await supabase
+                .from('reports')
+                .delete()
+                .or(`pinid.eq.${pinId},id.eq.${pinId}`);
+
         } catch (err) {
             console.error('Error deleting pin:', err.message);
+            throw err;
         }
     };
 
@@ -614,12 +625,43 @@ const ReportStatus = () => {
 
                             </>
                         ) : (
-                            <ActionButton 
-                                onClick={() => navigate("/dashboard")}
-                                startIcon={<FaMapMarkerAlt />}
-                            >
-                                Go to map
-                            </ActionButton>
+                            <Box display="flex" gap={2} justifyContent="center" flexWrap="wrap">
+                                {(() => {
+                                    const statusNorm = String(reportData.status || '').trim().toLowerCase();
+                                    const canDelete = statusNorm === 'pending' || statusNorm === 'resolved';
+                                    if (!canDelete) return null;
+
+                                    const isResolved = statusNorm === 'resolved';
+                                    return (
+                                        <ActionButton
+                                            onClick={async () => {
+                                                try {
+                                                    await handleDeletePin();
+                                                    navigate("/dashboard");
+                                                } catch (e) {
+                                                    alert(`Failed to delete pin: ${e?.message || e}`);
+                                                }
+                                            }}
+                                            sx={{
+                                                backgroundColor: isResolved ? '#2E7D32' : '#E63946',
+                                                '&:hover': {
+                                                    backgroundColor: isResolved ? '#1B5E20' : '#dc2f3c',
+                                                    transform: 'scale(1.05)',
+                                                },
+                                            }}
+                                        >
+                                            {isResolved ? 'Thank you' : 'Delete'}
+                                        </ActionButton>
+                                    );
+                                })()}
+
+                                <ActionButton 
+                                    onClick={() => navigate("/dashboard")}
+                                    startIcon={<FaMapMarkerAlt />}
+                                >
+                                    Go to map
+                                </ActionButton>
+                            </Box>
                         )}
                     </Box>
                 </StyledContent>
