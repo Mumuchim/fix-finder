@@ -42,6 +42,22 @@ const Login = () => {
                 return;
             }
 
+
+            // Show welcome message for new accounts (once per user on this device)
+            try {
+                const uid = data?.user?.id;
+                if (uid) {
+                    const key = `welcomed_${uid}`;
+                    if (!localStorage.getItem(key)) {
+                        toast.info('👋 Welcome to FixFinder! Report campus issues, track repairs in real-time, and help keep the campus safe.', {
+                            position: 'top-center',
+                            autoClose: 5000,
+                        });
+                        localStorage.setItem(key, '1');
+                    }
+                }
+            } catch {}
+
             // Success message and redirect
             toast.success('Login successful! Redirecting to dashboard...', {
                 position: 'top-center',

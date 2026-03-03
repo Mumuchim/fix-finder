@@ -181,8 +181,6 @@ const FloorContent = ({ areas, showImages, pins, onAreaClick, onPinClick, textSt
 
 const FloorMap = () => {
     const [pins, setPins] = useState([]);
-    // Store the current authenticated user id in state so UI counters re-render correctly.
-    const [currentUserId, setCurrentUserId] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [loadingAction, setLoadingAction] = useState(false);
     const [selectedPin, setSelectedPin] = useState(null);
@@ -365,14 +363,9 @@ const newCloud = { id: cloudId, src: flyingCloudAssets[idx], top: topVh, scale, 
         const updateUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             userRef.current = user;
-            setCurrentUserId(user?.id ?? null);
         };
         updateUser();
     }, []);
-
-    // Pin placement limit should only count the CURRENT user's pins.
-    // Other users' visible pins (e.g., "In Progress") must NOT reduce the reporter's remaining pins.
-    const myPinsCount = pins.filter(p => String(p?.user_uid || '') === String(currentUserId || '')).length;
 
 
     const toggleFloor = () => {
@@ -397,7 +390,7 @@ const newCloud = { id: cloudId, src: flyingCloudAssets[idx], top: topVh, scale, 
             return;
         }
 
-        if (myPinsCount >= 5) {
+        if (pins.length >= 5) {
             alert("Maximum limit of 5 pins reached.");
             return;
         }
@@ -1146,7 +1139,7 @@ useEffect(() => {
                                 marginBottom: 'clamp(10px, 2vw, 20px)',
                                 fontSize: 'clamp(18px, 3vw, 24px)'
                             }}>
-                                Select Pin Type ({5 - myPinsCount} remaining)
+                                Select Pin Type ({5 - pins.length} remaining)
                             </h2>
                             <div style={responsiveStyles.pinGrid}>
                                 {pinTypes.map((pin) => (
@@ -1198,7 +1191,7 @@ useEffect(() => {
                                 Are you sure you want to place a {selectedPinType?.label} pin here?
                             </p>
                             <p style={{ fontSize: 'clamp(14px, 2vw, 16px)' , color: '#1D3557'}}>
-            You have {5 - myPinsCount - 1} pins remaining after this placement.
+            You have {5 - pins.length - 1} pins remaining after this placement.
         </p>
                             <div style={{
                                 display: 'flex',
